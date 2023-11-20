@@ -1,6 +1,7 @@
 export default function Home() {
   return (
     <>
+      <h1>Inventory Assistant</h1>
       <table style={{ border: "1px solid black" }}>
         <thead>
           <tr>
