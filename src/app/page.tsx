@@ -41,9 +41,11 @@ export default function Home() {
           <tr>
             <th style={{ border: "1px solid black" }}>product</th>
             <th style={{ border: "1px solid black" }}>next order date</th>
-            <th style={{ border: "1px solid black" }}>sell rate</th>
             <th style={{ border: "1px solid black" }}>
-              current inventory level
+              sell rate(units per day)
+            </th>
+            <th style={{ border: "1px solid black" }}>
+              current inventory level (in days)
             </th>
           </tr>
         </thead>
