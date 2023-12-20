@@ -164,7 +164,7 @@ export default function Home() {
         );
       })}
       <div>
-        <label>minimum inventory: </label>
+        <label>minimum inventory(days): </label>
         <input
           style={{ border: "1px solid black", marginRight: "10px" }}
           type="number"
@@ -175,7 +175,7 @@ export default function Home() {
         />
       </div>
       <div>
-        <label>maximum inventory: </label>
+        <label>maximum inventory(days): </label>
         <input
           style={{ border: "1px solid black", marginRight: "10px" }}
           type="number"
