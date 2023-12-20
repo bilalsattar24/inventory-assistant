@@ -15,23 +15,9 @@ const defaultProducts = [
   {
     id: 1,
     name: "product 1",
-    currentInventoryUnits: 1,
-    sellRate: 10,
-    leadTimeDays: 70,
-  },
-  {
-    id: 2,
-    name: "product 2",
-    currentInventoryUnits: 2,
-    sellRate: 2,
-    leadTimeDays: 70,
-  },
-  {
-    id: 3,
-    name: "product 3",
-    currentInventoryUnits: 3,
-    sellRate: 3,
-    leadTimeDays: 70,
+    currentInventoryUnits: 0,
+    sellRate: 0,
+    leadTimeDays: 0,
   },
 ];
 
@@ -48,10 +34,12 @@ export default function Home() {
         product.currentInventoryUnits / product.sellRate -
         product.leadTimeDays -
         minimumInventory;
-      product.daysUntilReorder = daysUntilReorder;
+
+      product.daysUntilReorder = Math.floor(daysUntilReorder);
 
       const orderAmount =
-        (product.leadTimeDays + minimumInventory) * product.sellRate;
+        product.leadTimeDays / product.sellRate +
+        minimumInventory * product.sellRate;
       product.orderAmount = orderAmount;
     }
     setProducts(newProducts);
