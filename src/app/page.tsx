@@ -4,9 +4,9 @@ import { useState } from "react";
 type Product = {
   id: number;
   name: string;
-  nextOrderDate?: Date;
+  daysUntilReorder?: number;
   orderAmount?: number;
-  currentInventoryLevel: number;
+  currentInventoryUnits: number;
   sellRate: number;
   leadTimeDays: number;
 };
@@ -15,21 +15,21 @@ const defaultProducts = [
   {
     id: 1,
     name: "product 1",
-    currentInventoryLevel: 1,
+    currentInventoryUnits: 1,
     sellRate: 10,
     leadTimeDays: 70,
   },
   {
     id: 2,
     name: "product 2",
-    currentInventoryLevel: 2,
+    currentInventoryUnits: 2,
     sellRate: 2,
     leadTimeDays: 70,
   },
   {
     id: 3,
     name: "product 3",
-    currentInventoryLevel: 3,
+    currentInventoryUnits: 3,
     sellRate: 3,
     leadTimeDays: 70,
   },
@@ -40,7 +40,22 @@ export default function Home() {
   const [minimumInventory, setMinimumInventory] = useState(45);
   const [maximumInventory, setMaximumInventory] = useState(120);
 
-  const calculate = () => {};
+  const calculate = () => {
+    const newProducts = [...products];
+    for (let i = 0; i < products.length; i++) {
+      const product = newProducts[i];
+      const daysUntilReorder =
+        product.currentInventoryUnits / product.sellRate -
+        product.leadTimeDays -
+        minimumInventory;
+      product.daysUntilReorder = daysUntilReorder;
+
+      const orderAmount =
+        (product.leadTimeDays + minimumInventory) * product.sellRate;
+      product.orderAmount = orderAmount;
+    }
+    setProducts(newProducts);
+  };
 
   return (
     <>
@@ -49,7 +64,7 @@ export default function Home() {
         <thead>
           <tr>
             <th style={{ border: "1px solid black" }}>product</th>
-            <th style={{ border: "1px solid black" }}>next order date</th>
+            <th style={{ border: "1px solid black" }}>days until reorder</th>
             <th style={{ border: "1px solid black" }}>order amount</th>
             <th style={{ border: "1px solid black" }}>
               sell rate(units per day)
@@ -64,7 +79,7 @@ export default function Home() {
             <tr key={product.id}>
               <td style={{ border: "1px solid black" }}>{product.name}</td>
               <td style={{ border: "1px solid black" }}>
-                {product.nextOrderDate?.toLocaleDateString()}
+                {product.daysUntilReorder}
               </td>
               <td style={{ border: "1px solid black" }}>
                 {product.orderAmount}
@@ -72,7 +87,7 @@ export default function Home() {
               <td style={{ border: "1px solid black" }}>{product.sellRate}</td>
 
               <td style={{ border: "1px solid black" }}>
-                {product.currentInventoryLevel}
+                {product.currentInventoryUnits}
               </td>
             </tr>
           ))}
@@ -107,7 +122,7 @@ export default function Home() {
               }}
             />
             <br />
-            <label>current inventory level: </label>
+            <label>current inventory units: </label>
             <input
               style={{
                 border: "1px solid black",
@@ -115,10 +130,10 @@ export default function Home() {
                 marginBottom: "5px",
               }}
               type="number"
-              value={product.currentInventoryLevel}
+              value={product.currentInventoryUnits}
               onChange={(event) => {
                 const newProducts = [...products];
-                newProducts[index].currentInventoryLevel = Number(
+                newProducts[index].currentInventoryUnits = Number(
                   event.target.value
                 );
                 setProducts(newProducts);
