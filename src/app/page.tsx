@@ -201,6 +201,17 @@ export default function Home() {
           calculate
         </button>
       </div>
+      <div>
+        <div>
+          orderAmount = product.leadTimeDays / product.sellRate +
+          minimumInventory * product.sellRate;
+        </div>
+        <br />
+        <div>
+          daysUntilReorder = product.currentInventoryUnits / product.sellRate -
+          product.leadTimeDays - minimumInventory;
+        </div>
+      </div>
     </>
   );
 }
