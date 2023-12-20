@@ -49,7 +49,7 @@ export default function Home() {
         </thead>
         <tbody>
           {products.map((product) => (
-            <tr>
+            <tr key={product.name}>
               <td style={{ border: "1px solid black" }}>{product.name}</td>
               <td style={{ border: "1px solid black" }}>
                 {product.nextOrderDate?.toLocaleDateString()}
@@ -68,7 +68,7 @@ export default function Home() {
       <h2>edit default products</h2>
       {products.map((product, index) => {
         return (
-          <div>
+          <div key={product.name}>
             <label>name: </label>
             <input
               style={{ border: "1px solid black", marginRight: "10px" }}
