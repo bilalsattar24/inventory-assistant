@@ -60,7 +60,7 @@ export default function Home() {
         </thead>
         <tbody>
           {products.map((product) => (
-            <tr key={product.name}>
+            <tr key={product.id}>
               <td style={{ border: "1px solid black" }}>{product.name}</td>
               <td style={{ border: "1px solid black" }}>
                 {product.nextOrderDate?.toLocaleDateString()}
@@ -93,7 +93,6 @@ export default function Home() {
             <div style={{ fontWeight: "bold" }}>Edit item {index + 1}</div>
             <label>name: </label>
             <input
-              key={product.id}
               style={{
                 border: "1px solid black",
                 marginRight: "10px",
@@ -109,7 +108,6 @@ export default function Home() {
             <br />
             <label>current inventory level: </label>
             <input
-              key={product.id}
               style={{
                 border: "1px solid black",
                 marginRight: "10px",
