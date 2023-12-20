@@ -43,8 +43,8 @@ export default function Home() {
 
   return (
     <>
-      <h1>Inventory Assistant</h1>
-      <table style={{ border: "1px solid black" }}>
+      <h1 style={{ fontSize: "24px" }}>Inventory Assistant</h1>
+      <table style={{ border: "1px solid black", marginBottom: "30px" }}>
         <thead>
           <tr>
             <th style={{ border: "1px solid black" }}>product</th>
@@ -79,14 +79,26 @@ export default function Home() {
       </table>
 
       {/* ui for editing default products*/}
-      <h1>edit default products</h1>
+      <div style={{ fontSize: "24px" }}>Edit Product Inputs</div>
       {products.map((product, index) => {
         return (
-          <div key={product.id}>
+          <div
+            key={product.id}
+            style={{
+              marginBottom: "15px",
+              border: "1px solid black",
+              width: "400px",
+            }}
+          >
+            <div style={{ fontWeight: "bold" }}>Edit item {index + 1}</div>
             <label>name: </label>
             <input
               key={product.id}
-              style={{ border: "1px solid black", marginRight: "10px" }}
+              style={{
+                border: "1px solid black",
+                marginRight: "10px",
+                marginBottom: "5px",
+              }}
               value={product.name}
               onChange={(event) => {
                 const newProducts = [...products];
@@ -98,7 +110,11 @@ export default function Home() {
             <label>current inventory level: </label>
             <input
               key={product.id}
-              style={{ border: "1px solid black", marginRight: "10px" }}
+              style={{
+                border: "1px solid black",
+                marginRight: "10px",
+                marginBottom: "5px",
+              }}
               type="number"
               value={product.currentInventoryLevel}
               onChange={(event) => {
@@ -112,7 +128,11 @@ export default function Home() {
             <br />
             <label>sell rate: </label>
             <input
-              style={{ border: "1px solid black", marginRight: "10px" }}
+              style={{
+                border: "1px solid black",
+                marginRight: "10px",
+                marginBottom: "10px",
+              }}
               type="number"
               value={product.sellRate}
               onChange={(event) => {
@@ -125,7 +145,11 @@ export default function Home() {
 
             <label>lead time days: </label>
             <input
-              style={{ border: "1px solid black", marginRight: "10px" }}
+              style={{
+                border: "1px solid black",
+                marginRight: "10px",
+                marginBottom: "10px",
+              }}
               type="number"
               value={product.leadTimeDays}
               onChange={(event) => {
@@ -149,7 +173,20 @@ export default function Home() {
         />
       </div>
       <div>
-        <button onClick={calculate}>calculate</button>
+        <button
+          type="button"
+          onClick={calculate}
+          style={{
+            padding: "10px",
+            backgroundColor: "gray",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          calculate
+        </button>
       </div>
     </>
   );
