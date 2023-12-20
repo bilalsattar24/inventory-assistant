@@ -38,6 +38,7 @@ const defaultProducts = [
 export default function Home() {
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [minimumInventory, setMinimumInventory] = useState(45);
+  const [maximumInventory, setMaximumInventory] = useState(120);
 
   const calculate = () => {};
 
@@ -167,6 +168,17 @@ export default function Home() {
           value={minimumInventory}
           onChange={(event) => {
             setMinimumInventory(Number(event.target.value));
+          }}
+        />
+      </div>
+      <div>
+        <label>maximum inventory: </label>
+        <input
+          style={{ border: "1px solid black", marginRight: "10px" }}
+          type="number"
+          value={maximumInventory}
+          onChange={(event) => {
+            setMaximumInventory(Number(event.target.value));
           }}
         />
       </div>
