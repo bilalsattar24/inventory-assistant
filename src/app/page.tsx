@@ -1,217 +1,136 @@
 "use client";
-import { useState } from "react";
+import React from "react";
+import {
+  Box,
+  Button,
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  useTheme,
+} from "@mui/material";
+import Link from "next/link";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 
-type Product = {
-  id: number;
-  name: string;
-  daysUntilReorder?: number;
-  orderAmount?: number;
-  currentInventoryUnits: number;
-  sellRate: number;
-  leadTimeDays: number;
-};
-
-const defaultProducts = [
-  {
-    id: 1,
-    name: "product 1",
-    currentInventoryUnits: 0,
-    sellRate: 0,
-    leadTimeDays: 0,
-  },
-];
-
-export default function Home() {
-  const [products, setProducts] = useState<Product[]>(defaultProducts);
-  const [minimumInventory, setMinimumInventory] = useState(45);
-  const [maximumInventory, setMaximumInventory] = useState(120);
-
-  const calculate = () => {
-    const newProducts = [...products];
-    for (let i = 0; i < products.length; i++) {
-      const product = newProducts[i];
-      const daysUntilReorder =
-        product.currentInventoryUnits / product.sellRate -
-        product.leadTimeDays -
-        minimumInventory;
-
-      product.daysUntilReorder = Math.floor(daysUntilReorder);
-
-      const orderAmount =
-        product.leadTimeDays / product.sellRate +
-        minimumInventory * product.sellRate;
-      product.orderAmount = orderAmount;
-    }
-    setProducts(newProducts);
-  };
+export default function LandingPage() {
+  const theme = useTheme();
 
   return (
-    <>
-      <h1 style={{ fontSize: "24px" }}>Inventory Assistant</h1>
-      <table style={{ border: "1px solid black", marginBottom: "30px" }}>
-        <thead>
-          <tr>
-            <th style={{ border: "1px solid black" }}>product</th>
-            <th style={{ border: "1px solid black" }}>days until reorder</th>
-            <th style={{ border: "1px solid black" }}>order amount</th>
-            <th style={{ border: "1px solid black" }}>
-              sell rate(units per day)
-            </th>
-            <th style={{ border: "1px solid black" }}>
-              current inventory level (in days)
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td style={{ border: "1px solid black" }}>{product.name}</td>
-              <td style={{ border: "1px solid black" }}>
-                {product.daysUntilReorder}
-              </td>
-              <td style={{ border: "1px solid black" }}>
-                {product.orderAmount}
-              </td>
-              <td style={{ border: "1px solid black" }}>{product.sellRate}</td>
+    <Box>
+      {/* Hero Section */}
+      <Box
+        sx={{
+          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+          color: "white",
+          py: 10,
+        }}>
+        <Container>
+          <Box maxWidth="md">
+            <Typography
+              variant="h2"
+              component="h1"
+              gutterBottom
+              fontWeight="bold">
+              Optimize Your Amazon Inventory Management
+            </Typography>
+            <Typography variant="h5" paragraph sx={{ mb: 4 }}>
+              Make data-driven restocking decisions and never run out of
+              inventory again. Perfect timing, optimal quantities, maximum
+              profits.
+            </Typography>
+            <Button
+              component={Link}
+              href="/dashboard"
+              variant="contained"
+              size="large"
+              sx={{
+                bgcolor: "white",
+                color: "primary.main",
+                "&:hover": { bgcolor: "grey.100" },
+              }}>
+              Get Started
+            </Button>
+          </Box>
+        </Container>
+      </Box>
 
-              <td style={{ border: "1px solid black" }}>
-                {product.currentInventoryUnits}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Features Section */}
+      <Box sx={{ py: 8 }}>
+        <Container>
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4}>
+              <FeatureCard
+                title="Smart Reorder Predictions"
+                description="AI-powered algorithms calculate optimal reorder dates based on your sales velocity and lead times."
+                icon={<BarChartIcon sx={{ fontSize: 40 }} />}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FeatureCard
+                title="Inventory Optimization"
+                description="Balance storage costs and stockout risks with intelligent inventory level recommendations."
+                icon={<InventoryIcon sx={{ fontSize: 40 }} />}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FeatureCard
+                title="Real-time Monitoring"
+                description="Track your inventory levels across all Amazon warehouses in real-time."
+                icon={<PhoneAndroidIcon sx={{ fontSize: 40 }} />}
+              />
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
 
-      {/* ui for editing default products*/}
-      <div style={{ fontSize: "24px" }}>Edit Product Inputs</div>
-      {products.map((product, index) => {
-        return (
-          <div
-            key={product.id}
-            style={{
-              marginBottom: "15px",
-              border: "1px solid black",
-              width: "400px",
-            }}
-          >
-            <div style={{ fontWeight: "bold" }}>Edit item {index + 1}</div>
-            <label>name: </label>
-            <input
-              style={{
-                border: "1px solid black",
-                marginRight: "10px",
-                marginBottom: "5px",
-              }}
-              value={product.name}
-              onChange={(event) => {
-                const newProducts = [...products];
-                newProducts[index].name = event.target.value;
-                setProducts(newProducts);
-              }}
-            />
-            <br />
-            <label>current inventory units: </label>
-            <input
-              style={{
-                border: "1px solid black",
-                marginRight: "10px",
-                marginBottom: "5px",
-              }}
-              type="number"
-              value={product.currentInventoryUnits}
-              onChange={(event) => {
-                const newProducts = [...products];
-                newProducts[index].currentInventoryUnits = Number(
-                  event.target.value
-                );
-                setProducts(newProducts);
-              }}
-            />
-            <br />
-            <label>sell rate: </label>
-            <input
-              style={{
-                border: "1px solid black",
-                marginRight: "10px",
-                marginBottom: "10px",
-              }}
-              type="number"
-              value={product.sellRate}
-              onChange={(event) => {
-                const newProducts = [...products];
-                newProducts[index].sellRate = Number(event.target.value);
-                setProducts(newProducts);
-              }}
-            />
-            <br />
+      {/* CTA Section */}
+      <Box sx={{ bgcolor: "grey.50", py: 8 }}>
+        <Container>
+          <Box textAlign="center">
+            <Typography variant="h3" component="h2" gutterBottom>
+              Ready to Optimize Your Amazon Business?
+            </Typography>
+            <Button
+              component={Link}
+              href="/dashboard"
+              variant="contained"
+              size="large"
+              sx={{ mt: 2 }}>
+              Try It Free
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+    </Box>
+  );
+}
 
-            <label>lead time days: </label>
-            <input
-              style={{
-                border: "1px solid black",
-                marginRight: "10px",
-                marginBottom: "10px",
-              }}
-              type="number"
-              value={product.leadTimeDays}
-              onChange={(event) => {
-                const newProducts = [...products];
-                newProducts[index].leadTimeDays = Number(event.target.value);
-                setProducts(newProducts);
-              }}
-            />
-          </div>
-        );
-      })}
-      <div>
-        <label>minimum inventory(days): </label>
-        <input
-          style={{ border: "1px solid black", marginRight: "10px" }}
-          type="number"
-          value={minimumInventory}
-          onChange={(event) => {
-            setMinimumInventory(Number(event.target.value));
-          }}
-        />
-      </div>
-      <div>
-        <label>maximum inventory(days): </label>
-        <input
-          style={{ border: "1px solid black", marginRight: "10px" }}
-          type="number"
-          value={maximumInventory}
-          onChange={(event) => {
-            setMaximumInventory(Number(event.target.value));
-          }}
-        />
-      </div>
-      <div>
-        <button
-          type="button"
-          onClick={calculate}
-          style={{
-            padding: "10px",
-            backgroundColor: "gray",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          calculate
-        </button>
-      </div>
-      <div>
-        <div>
-          orderAmount = product.leadTimeDays / product.sellRate +
-          minimumInventory * product.sellRate;
-        </div>
-        <br />
-        <div>
-          daysUntilReorder = product.currentInventoryUnits / product.sellRate -
-          product.leadTimeDays - minimumInventory;
-        </div>
-      </div>
-    </>
+function FeatureCard({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <Paper
+      elevation={2}
+      sx={{
+        p: 4,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}>
+      <Box sx={{ color: "primary.main", mb: 2 }}>{icon}</Box>
+      <Typography variant="h6" gutterBottom>
+        {title}
+      </Typography>
+      <Typography color="text.secondary">{description}</Typography>
+    </Paper>
   );
 }
