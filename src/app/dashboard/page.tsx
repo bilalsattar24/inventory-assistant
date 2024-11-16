@@ -150,14 +150,68 @@ export default function Dashboard() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Product</TableCell>
+              <TableCell>Product Name</TableCell>
               <TableCell>SKU</TableCell>
-              <TableCell>Current Stock</TableCell>
-              <TableCell>Adjusted Daily Sales</TableCell>
-              <TableCell>Days Until Stockout</TableCell>
-              <TableCell>Safety Stock Level</TableCell>
-              <TableCell>Recommended Order Date</TableCell>
-              <TableCell>Recommended Quantity</TableCell>
+              <TableCell>
+                <Tooltip title="Current inventory quantity in stock">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Current Stock (units)
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip title="Average number of units sold per day, adjusted by the sales velocity multiplier">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Daily Sales (units/day)
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip title="Estimated number of days until current stock runs out at current sales rate">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Days Until Stockout
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip title="Minimum stock level to maintain as safety buffer">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Safety Stock (units)
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip title="Recommended date to place the next order">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Order By Date
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip title="Recommended quantity to order next">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Order Quantity (units)
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -167,14 +221,23 @@ export default function Dashboard() {
                   <Typography variant="subtitle2">{item.product}</Typography>
                 </TableCell>
                 <TableCell>{item.sku}</TableCell>
-                <TableCell>{item.currentStock}</TableCell>
+                <TableCell>{item.currentStock.toLocaleString()}</TableCell>
                 <TableCell>{item.adjustedDailySales.toFixed(1)}</TableCell>
                 <TableCell>
                   <StockoutIndicator days={item.daysUntilStockout} />
                 </TableCell>
-                <TableCell>{item.safetyStock}</TableCell>
-                <TableCell>{item.recommendedOrderDate}</TableCell>
-                <TableCell>{item.recommendedQuantity}</TableCell>
+                <TableCell>{item.safetyStock.toLocaleString()}</TableCell>
+                <TableCell>
+                  <Tooltip
+                    title={`Order ${
+                      item.daysUntilStockout - 30
+                    } days from now`}>
+                    <span>{item.recommendedOrderDate}</span>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  {item.recommendedQuantity.toLocaleString()}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
