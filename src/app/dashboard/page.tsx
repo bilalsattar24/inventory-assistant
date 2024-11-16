@@ -17,8 +17,12 @@ import {
   TextField,
   Card,
   CardContent,
+  Button,
+  Collapse,
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import Tooltip from "@mui/material/Tooltip";
 
 // Base mock data
@@ -44,6 +48,7 @@ const baseInventoryData = [
 ];
 
 export default function Dashboard() {
+  const [showParameters, setShowParameters] = useState(false);
   const [safetyStockMultiplier, setSafetyStockMultiplier] = useState(1.5);
   const [leadTimeBuffer, setLeadTimeBuffer] = useState(7);
   const [salesVelocityMultiplier, setSalesVelocityMultiplier] = useState(1.0);
@@ -79,46 +84,67 @@ export default function Dashboard() {
         <Typography variant="h4" component="h1" gutterBottom>
           Inventory Dashboard
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-          Adjust parameters to simulate different scenarios
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}>
+          <Typography variant="subtitle1" color="text.secondary">
+            Monitor and manage your Amazon inventory
+          </Typography>
+          <Button
+            onClick={() => setShowParameters(!showParameters)}
+            variant="outlined"
+            endIcon={showParameters ? <ExpandLessIcon /> : <ExpandMoreIcon />}>
+            {showParameters ? "Hide Parameters" : "Adjust Parameters"}
+          </Button>
+        </Box>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <ParameterCard
-            title="Safety Stock Multiplier"
-            value={safetyStockMultiplier}
-            onChange={(value) => setSafetyStockMultiplier(value)}
-            min={1}
-            max={3}
-            step={0.1}
-            tooltip="Multiplier for safety stock calculation. Higher values mean more buffer stock."
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <ParameterCard
-            title="Lead Time Buffer (Days)"
-            value={leadTimeBuffer}
-            onChange={(value) => setLeadTimeBuffer(value)}
-            min={0}
-            max={120}
-            step={1}
-            tooltip="Additional buffer days added to the standard lead time"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <ParameterCard
-            title="Sales Velocity Multiplier"
-            value={salesVelocityMultiplier}
-            onChange={(value) => setSalesVelocityMultiplier(value)}
-            min={0.5}
-            max={2}
-            step={0.1}
-            tooltip="Adjust sales velocity predictions. Use this to simulate faster or slower sales."
-          />
-        </Grid>
-      </Grid>
+      <Collapse in={showParameters}>
+        <Paper sx={{ p: 3, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Simulation Parameters
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <ParameterCard
+                title="Safety Stock Multiplier"
+                value={safetyStockMultiplier}
+                onChange={(value) => setSafetyStockMultiplier(value)}
+                min={1}
+                max={3}
+                step={0.1}
+                tooltip="Multiplier for safety stock calculation. Higher values mean more buffer stock."
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ParameterCard
+                title="Lead Time Buffer (Days)"
+                value={leadTimeBuffer}
+                onChange={(value) => setLeadTimeBuffer(value)}
+                min={0}
+                max={120}
+                step={1}
+                tooltip="Additional buffer days added to the standard lead time"
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ParameterCard
+                title="Sales Velocity Multiplier"
+                value={salesVelocityMultiplier}
+                onChange={(value) => setSalesVelocityMultiplier(value)}
+                min={0.5}
+                max={2}
+                step={0.1}
+                tooltip="Adjust sales velocity predictions. Use this to simulate faster or slower sales."
+              />
+            </Grid>
+          </Grid>
+        </Paper>
+      </Collapse>
 
       <TableContainer component={Paper} elevation={2}>
         <Table>
