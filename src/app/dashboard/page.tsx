@@ -102,7 +102,7 @@ export default function Dashboard() {
             value={leadTimeBuffer}
             onChange={(value) => setLeadTimeBuffer(value)}
             min={0}
-            max={30}
+            max={120}
             step={1}
             tooltip="Additional buffer days added to the standard lead time"
           />
