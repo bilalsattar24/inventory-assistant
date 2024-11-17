@@ -335,7 +335,15 @@ function FeatureCard({
   );
 }
 
-function BenefitItem({ icon, title, description }) {
+function BenefitItem({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
   return (
     <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
       <Box
@@ -363,7 +371,15 @@ function BenefitItem({ icon, title, description }) {
   );
 }
 
-function TestimonialCard({ quote, author, role }) {
+function TestimonialCard({
+  quote,
+  author,
+  role,
+}: {
+  quote: string;
+  author: string;
+  role: string;
+}) {
   return (
     <Paper
       elevation={0}
@@ -400,7 +416,19 @@ function TestimonialCard({ quote, author, role }) {
   );
 }
 
-function PricingCard({ title, price, period, features, featured = false }) {
+function PricingCard({
+  title,
+  price,
+  period,
+  features,
+  featured = false,
+}: {
+  title: string;
+  price: string;
+  period: string;
+  features: string[];
+  featured?: boolean;
+}) {
   return (
     <Paper
       elevation={featured ? 4 : 0}
