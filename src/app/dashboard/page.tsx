@@ -25,6 +25,31 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import Tooltip from "@mui/material/Tooltip";
 
+// Add these theme colors at the top of the file
+const themeColors = {
+  primary: {
+    main: "#2D3250", // Deep navy blue
+    light: "#424769", // Lighter navy
+    dark: "#1B1F31", // Darker navy
+  },
+  secondary: {
+    main: "#F6B17A", // Warm orange
+    light: "#FFD9B7", // Light peach
+  },
+  success: {
+    main: "#4E9F3D", // Forest green
+    light: "#D7E6D5", // Light sage
+  },
+  warning: {
+    main: "#FF7E67", // Coral
+    light: "#FFB4A2", // Light coral
+  },
+  error: {
+    main: "#E94560", // Ruby red
+    light: "#FFD5DD", // Light pink
+  },
+};
+
 // Base mock data
 const baseInventoryData = [
   {
@@ -79,7 +104,7 @@ export default function Dashboard() {
   });
 
   return (
-    <Container sx={{ py: 4 }}>
+    <Container sx={{ py: 4, bgcolor: "#F8F9FA" }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Inventory Dashboard
@@ -96,7 +121,16 @@ export default function Dashboard() {
           </Typography>
           <Button
             onClick={() => setShowParameters(!showParameters)}
-            variant="outlined"
+            variant="contained"
+            sx={{
+              bgcolor: themeColors.primary.main,
+              "&:hover": {
+                bgcolor: themeColors.primary.light,
+              },
+              borderRadius: "8px",
+              textTransform: "none",
+              px: 3,
+            }}
             endIcon={showParameters ? <ExpandLessIcon /> : <ExpandMoreIcon />}>
             {showParameters ? "Hide Parameters" : "Adjust Parameters"}
           </Button>
@@ -104,7 +138,13 @@ export default function Dashboard() {
       </Box>
 
       <Collapse in={showParameters}>
-        <Paper sx={{ p: 3, mb: 4 }}>
+        <Paper
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 2,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          }}>
           <Typography variant="h6" gutterBottom>
             Simulation Parameters
           </Typography>
@@ -146,7 +186,21 @@ export default function Dashboard() {
         </Paper>
       </Collapse>
 
-      <TableContainer component={Paper} elevation={2}>
+      <TableContainer
+        component={Paper}
+        elevation={2}
+        sx={{
+          borderRadius: 2,
+          overflow: "hidden",
+          "& .MuiTableCell-head": {
+            bgcolor: themeColors.primary.main,
+            color: "white",
+            fontWeight: 600,
+          },
+          "& .MuiTableRow-root:hover": {
+            bgcolor: "rgba(0,0,0,0.02)",
+          },
+        }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -265,7 +319,16 @@ function ParameterCard({
   tooltip: string;
 }) {
   return (
-    <Card>
+    <Card
+      sx={{
+        borderRadius: 2,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        "&:hover": {
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+          transform: "translateY(-2px)",
+        },
+        transition: "all 0.2s ease-in-out",
+      }}>
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Typography variant="h6" component="div">
@@ -307,17 +370,29 @@ function ParameterCard({
 }
 
 function StockoutIndicator({ days }: { days: number }) {
-  let color: "success" | "warning" | "error" = "success";
+  let color = themeColors.success.main;
+  let bgColor = themeColors.success.light;
+
   if (days < 14) {
-    color = "error";
+    color = themeColors.error.main;
+    bgColor = themeColors.error.light;
   } else if (days < 30) {
-    color = "warning";
+    color = themeColors.warning.main;
+    bgColor = themeColors.warning.light;
   }
 
   return (
     <Chip
       label={`${days} days`}
-      color={color}
+      sx={{
+        color: color,
+        bgcolor: bgColor,
+        borderColor: color,
+        fontWeight: 500,
+        "& .MuiChip-label": {
+          px: 2,
+        },
+      }}
       size="small"
       variant="outlined"
     />
