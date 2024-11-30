@@ -110,20 +110,52 @@ export default function Dashboard() {
     const totalLeadTime = item.leadTimeInDays + leadTimeBuffer;
     const safetyStock = Math.ceil(adjustedDailySales * safetyStockDays);
     const daysUntilStockout = Math.ceil(item.currentStock / adjustedDailySales);
+
+    // Calculate order quantity for 60 days of stock
+    const targetStock = Math.ceil(adjustedDailySales * 60);
     const recommendedOrderPoint = Math.ceil(
       adjustedDailySales * totalLeadTime + safetyStock
+    );
+    const recommendedQuantity = Math.max(0, targetStock - item.currentStock);
+
+    // Calculate shipping details
+    const maxFBAStock = Math.ceil(adjustedDailySales * 100); // 100 days max in FBA
+    const shippingLeadTime = 45; // 45 days shipping lead time
+
+    // Calculate when stock will hit safety stock level
+    const daysUntilSafetyStock = Math.ceil(
+      (item.currentStock - safetyStock) / adjustedDailySales
+    );
+
+    // Calculate ship date to arrive when inventory hits safety stock
+    const shipDate = new Date();
+    shipDate.setDate(
+      shipDate.getDate() + Math.max(0, daysUntilSafetyStock - shippingLeadTime)
+    );
+
+    // Calculate shipping quantity (limited by max FBA stock)
+    const shippingQuantity = Math.min(
+      recommendedQuantity,
+      maxFBAStock -
+        Math.max(
+          0,
+          item.currentStock - adjustedDailySales * daysUntilSafetyStock
+        )
     );
 
     return {
       ...item,
       daysUntilStockout,
       recommendedOrderDate: calculateOrderDate(daysUntilStockout),
-      recommendedQuantity: Math.max(
-        0,
-        recommendedOrderPoint - item.currentStock
-      ),
+      recommendedQuantity,
       adjustedDailySales,
       safetyStock,
+      shipDate: shipDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }),
+      shippingQuantity: Math.max(0, Math.ceil(shippingQuantity)),
     };
   });
 
@@ -290,6 +322,26 @@ export default function Dashboard() {
                   </Box>
                 </Tooltip>
               </TableCell>
+              <TableCell>
+                <Tooltip title="Date to ship inventory to arrive when stock hits safety level">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Ship Date
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip title="Quantity to ship (limited by Amazon FBA maximum)">
+                  <Box
+                    component="span"
+                    sx={{ display: "flex", alignItems: "center" }}>
+                    Ship Quantity (units)
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -316,6 +368,8 @@ export default function Dashboard() {
                 <TableCell>
                   {item.recommendedQuantity.toLocaleString()}
                 </TableCell>
+                <TableCell>{item.shipDate}</TableCell>
+                <TableCell>{item.shippingQuantity.toLocaleString()}</TableCell>
               </TableRow>
             ))}
           </TableBody>
