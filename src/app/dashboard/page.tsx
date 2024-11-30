@@ -74,7 +74,7 @@ const baseInventoryData = [
 
 export default function Dashboard() {
   const [showParameters, setShowParameters] = useState(false);
-  const [safetyStockMultiplier, setSafetyStockMultiplier] = useState(1.5);
+  const [safetyStockDays, setSafetyStockDays] = useState(14);
   const [leadTimeBuffer, setLeadTimeBuffer] = useState(7);
   const [salesVelocityMultiplier, setSalesVelocityMultiplier] = useState(1.0);
 
@@ -82,9 +82,7 @@ export default function Dashboard() {
   const calculatedInventoryData = baseInventoryData.map((item) => {
     const adjustedDailySales = item.avgDailySales * salesVelocityMultiplier;
     const totalLeadTime = item.leadTimeInDays + leadTimeBuffer;
-    const safetyStock = Math.ceil(
-      adjustedDailySales * item.safetyStockDays * safetyStockMultiplier
-    );
+    const safetyStock = Math.ceil(adjustedDailySales * safetyStockDays);
     const daysUntilStockout = Math.ceil(item.currentStock / adjustedDailySales);
     const recommendedOrderPoint = Math.ceil(
       adjustedDailySales * totalLeadTime + safetyStock
@@ -151,13 +149,13 @@ export default function Dashboard() {
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <ParameterCard
-                title="Safety Stock Multiplier"
-                value={safetyStockMultiplier}
-                onChange={(value) => setSafetyStockMultiplier(value)}
+                title="Safety Stock Days"
+                value={safetyStockDays}
+                onChange={(value) => setSafetyStockDays(value)}
                 min={1}
-                max={3}
-                step={0.1}
-                tooltip="Multiplier for safety stock calculation. Higher values mean more buffer stock."
+                max={100}
+                step={1}
+                tooltip="Number of days of safety stock to maintain"
               />
             </Grid>
             <Grid item xs={12} md={4}>
