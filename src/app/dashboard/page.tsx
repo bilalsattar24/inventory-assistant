@@ -72,6 +72,32 @@ const baseInventoryData = [
   },
 ];
 
+// Add this function to calculate daily inventory levels
+function calculateDailyInventory(item: any, days: number = 100) {
+  const dailyForecasts = [];
+  let remainingStock = item.currentStock;
+  const today = new Date();
+
+  for (let i = 0; i < days && remainingStock > 0; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() + i);
+
+    remainingStock = Math.max(0, remainingStock - item.adjustedDailySales);
+
+    dailyForecasts.push({
+      date: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      inventory: Math.round(remainingStock),
+      daysFromNow: i,
+    });
+  }
+
+  return dailyForecasts;
+}
+
 export default function Dashboard() {
   const [showParameters, setShowParameters] = useState(false);
   const [safetyStockDays, setSafetyStockDays] = useState(14);
@@ -295,6 +321,56 @@ export default function Dashboard() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Daily Inventory Forecast
+        </Typography>
+        {calculatedInventoryData.map((item) => (
+          <Box key={item.id} sx={{ mb: 4 }}>
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ color: themeColors.primary.main, fontWeight: 600 }}>
+              {item.product} ({item.sku})
+            </Typography>
+            <TableContainer
+              component={Paper}
+              elevation={2}
+              sx={{ borderRadius: 2 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell align="right">Projected Inventory</TableCell>
+                    <TableCell align="right">Days from Now</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {calculateDailyInventory(item).map((forecast) => (
+                    <TableRow
+                      key={forecast.date}
+                      sx={{
+                        bgcolor:
+                          forecast.inventory < item.safetyStock
+                            ? themeColors.error.light
+                            : "inherit",
+                      }}>
+                      <TableCell>{forecast.date}</TableCell>
+                      <TableCell align="right">
+                        {forecast.inventory.toLocaleString()}
+                      </TableCell>
+                      <TableCell align="right">
+                        {forecast.daysFromNow}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        ))}
+      </Box>
     </Container>
   );
 }
