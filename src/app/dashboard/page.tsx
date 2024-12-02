@@ -76,8 +76,7 @@ function calculateNextOrderInfo(
   currentStock: number,
   dailySales: number,
   safetyStockDays: number,
-  leadTime: number,
-  orderQuantity: number
+  leadTime: number
 ) {
   // Calculate days until safety stock is reached
   const daysUntilSafetyStock = Math.floor(
@@ -94,6 +93,10 @@ function calculateNextOrderInfo(
   // Calculate the shipping date (order date + lead time)
   const shipDate = new Date(orderDate);
   shipDate.setDate(shipDate.getDate() + leadTime);
+
+  // Calculate optimal order quantity:
+  // Cover lead time + safety stock period + 30 days of sales
+  const orderQuantity = Math.ceil(dailySales * (leadTime + safetyStockDays + 30));
 
   return {
     orderDate,
@@ -116,7 +119,6 @@ export default function Dashboard() {
   const [parameters, setParameters] = useState({
     leadTime: 30,
     safetyStock: 14,
-    orderQuantity: 100,
   });
 
   const { colorMode } = useColorMode();
@@ -188,7 +190,7 @@ export default function Dashboard() {
           <Heading size="lg" mb={6}>
             Inventory Dashboard
           </Heading>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6}>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
             <ParameterCard
               title="Lead Time"
               value={parameters.leadTime}
@@ -207,17 +209,6 @@ export default function Dashboard() {
               step={1}
               tooltip="Buffer stock to maintain for unexpected demand or delays"
             />
-            <ParameterCard
-              title="Order Quantity"
-              value={parameters.orderQuantity}
-              onChange={(value) =>
-                handleParameterChange("orderQuantity", value)
-              }
-              min={10}
-              max={1000}
-              step={10}
-              tooltip="Standard quantity to order for each restock"
-            />
           </Grid>
         </Box>
 
@@ -232,7 +223,7 @@ export default function Dashboard() {
                     <Th isNumeric>Current Stock</Th>
                     <Th isNumeric>Daily Sales</Th>
                     <Th>Next Order Date</Th>
-                    <Th isNumeric>Order Amount</Th>
+                    <Th isNumeric>Recommended Order</Th>
                     <Th>Expected Arrival</Th>
                     <Th>Status</Th>
                     <Th>Actions</Th>
@@ -244,8 +235,7 @@ export default function Dashboard() {
                       item.currentStock,
                       item.averageDailySales,
                       parameters.safetyStock,
-                      parameters.leadTime,
-                      parameters.orderQuantity
+                      parameters.leadTime
                     );
                     
                     return (
@@ -260,7 +250,11 @@ export default function Dashboard() {
                               {formatDate(nextOrder.orderDate)}
                             </Text>
                           </Td>
-                          <Td isNumeric>{parameters.orderQuantity}</Td>
+                          <Td isNumeric>
+                            <Text fontWeight="semibold">
+                              {nextOrder.orderQuantity}
+                            </Text>
+                          </Td>
                           <Td>{formatDate(nextOrder.shipDate)}</Td>
                           <Td>
                             <Badge colorScheme={getStatusColor(item.status)}>
