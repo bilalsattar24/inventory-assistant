@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { useColorMode } from "@chakra-ui/color-mode";
 import {
   Box,
   Container,
@@ -26,8 +25,10 @@ import {
   Collapse,
   SliderFilledTrack,
   Th,
+  useColorMode,
+  Icon,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronUpIcon, InfoIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronUpIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 
 // Add these theme colors at the top of the file
 const themeColors = {
@@ -142,7 +143,7 @@ export default function Dashboard() {
 
   return (
     <Container maxW="container.xl" py={8}>
-      <VStack  align="stretch">
+      <VStack align="stretch">
         <Box>
           <Heading size="lg" mb={6}>
             Inventory Dashboard
@@ -169,7 +170,9 @@ export default function Dashboard() {
             <ParameterCard
               title="Order Quantity"
               value={parameters.orderQuantity}
-              onChange={(value) => handleParameterChange("orderQuantity", value)}
+              onChange={(value) =>
+                handleParameterChange("orderQuantity", value)
+              }
               min={10}
               max={1000}
               step={10}
@@ -213,9 +216,9 @@ export default function Dashboard() {
                             onClick={() => toggleExpanded(item.id)}
                             rightIcon={
                               expanded[item.id] ? (
-                                <ChevronUpIcon />
+                                <Icon as={ChevronUpIcon} />
                               ) : (
-                                <ChevronDownIcon />
+                                <Icon as={ChevronDownIcon} />
                               )
                             }
                           >
@@ -237,7 +240,9 @@ export default function Dashboard() {
                                 <Card>
                                   <CardBody>
                                     <VStack align="start" spacing={4}>
-                                      <Heading size="sm">Stock Analysis</Heading>
+                                      <Heading size="sm">
+                                        Stock Analysis
+                                      </Heading>
                                       <StockoutIndicator
                                         days={calculateDaysUntilStockout(item)}
                                       />
@@ -291,7 +296,9 @@ function ParameterCard({
           <HStack>
             <Text fontWeight="semibold">{title}</Text>
             <Tooltip label={tooltip}>
-              <InfoIcon color="gray.500" />
+              <Box as="span">
+                <Icon as={InfoOutlineIcon} color="gray.500" />
+              </Box>
             </Tooltip>
           </HStack>
           <HStack w="100%" spacing={4}>

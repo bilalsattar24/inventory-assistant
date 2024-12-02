@@ -71,17 +71,16 @@ export default function LandingPage() {
             <Text fontSize="xl" maxW="2xl" mb={8}>
               Make data-driven restocking decisions and never run out of inventory again. Perfect timing, optimal quantities, maximum profits.
             </Text>
-            <Link href="/dashboard" passHref>
-              <Button
-                as="a"
-                size="lg"
-                colorScheme="orange"
-                bg={themeColors.accent.orange}
-                _hover={{ bg: themeColors.accent.peach }}
-              >
-                Get Started
-              </Button>
-            </Link>
+            <Button
+              as={Link}
+              href="/dashboard"
+              size="lg"
+              colorScheme="orange"
+              bg={themeColors.accent.orange}
+              _hover={{ bg: themeColors.accent.peach }}
+            >
+              Get Started
+            </Button>
           </VStack>
         </Container>
       </Box>
@@ -224,17 +223,16 @@ export default function LandingPage() {
             <Heading textAlign="center" mb={8}>
               Ready to Optimize Your Amazon Business?
             </Heading>
-            <Link href="/dashboard" passHref>
-              <Button
-                as="a"
-                size="lg"
-                colorScheme="orange"
-                bg={themeColors.accent.orange}
-                _hover={{ bg: themeColors.accent.peach }}
-              >
-                Try It Free
-              </Button>
-            </Link>
+            <Button
+              as={Link}
+              href="/dashboard"
+              size="lg"
+              colorScheme="orange"
+              bg={themeColors.accent.orange}
+              _hover={{ bg: themeColors.accent.peach }}
+            >
+              Try It Free
+            </Button>
           </VStack>
         </Container>
       </Box>
