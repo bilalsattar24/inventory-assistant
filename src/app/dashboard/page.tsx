@@ -114,6 +114,15 @@ function formatDate(date: Date): string {
   });
 }
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  sku: string;
+  currentStock: number;
+  averageDailySales: number;
+  status: string;
+}
+
 export default function Dashboard() {
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
   const [parameters, setParameters] = useState({
@@ -121,18 +130,13 @@ export default function Dashboard() {
     safetyStock: 14,
   });
 
-  const { colorMode } = useColorMode();
-  const bgColor = colorMode === "light" ? "white" : "gray.800";
-  const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
-
-  const inventoryItems = [
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
     {
       id: "1",
       name: "Product A",
       sku: "SKU001",
       currentStock: 150,
       averageDailySales: 2.5,
-      reorderPoint: 75,
       status: "Healthy",
     },
     {
@@ -141,7 +145,6 @@ export default function Dashboard() {
       sku: "SKU002",
       currentStock: 50,
       averageDailySales: 3,
-      reorderPoint: 90,
       status: "Warning",
     },
     {
@@ -150,10 +153,33 @@ export default function Dashboard() {
       sku: "SKU003",
       currentStock: 25,
       averageDailySales: 1.5,
-      reorderPoint: 45,
       status: "Critical",
     },
-  ];
+  ]);
+
+  const handleInventoryChange = (
+    id: string,
+    field: "currentStock" | "averageDailySales",
+    value: string
+  ) => {
+    const numValue = Number(value);
+    if (isNaN(numValue) || numValue < 0) return;
+
+    setInventoryItems((items) =>
+      items.map((item) => {
+        if (item.id === id) {
+          const updatedItem = { ...item, [field]: numValue };
+          // Update status based on new values
+          const daysOfStock = updatedItem.currentStock / updatedItem.averageDailySales;
+          updatedItem.status = 
+            daysOfStock > 45 ? "Healthy" :
+            daysOfStock > 30 ? "Warning" : "Critical";
+          return updatedItem;
+        }
+        return item;
+      })
+    );
+  };
 
   const toggleExpanded = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -182,6 +208,10 @@ export default function Dashboard() {
   const calculateDaysUntilStockout = (item: any) => {
     return Math.floor(item.currentStock / item.averageDailySales);
   };
+
+  const { colorMode } = useColorMode();
+  const bgColor = colorMode === "light" ? "white" : "gray.800";
+  const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -243,8 +273,33 @@ export default function Dashboard() {
                         <Tr>
                           <Td>{item.name}</Td>
                           <Td>{item.sku}</Td>
-                          <Td isNumeric>{item.currentStock}</Td>
-                          <Td isNumeric>{item.averageDailySales.toFixed(1)}</Td>
+                          <Td isNumeric>
+                            <Input
+                              type="number"
+                              value={item.currentStock}
+                              onChange={(e) => 
+                                handleInventoryChange(item.id, "currentStock", e.target.value)
+                              }
+                              size="sm"
+                              width="80px"
+                              textAlign="right"
+                              min={0}
+                            />
+                          </Td>
+                          <Td isNumeric>
+                            <Input
+                              type="number"
+                              value={item.averageDailySales}
+                              onChange={(e) => 
+                                handleInventoryChange(item.id, "averageDailySales", e.target.value)
+                              }
+                              size="sm"
+                              width="80px"
+                              textAlign="right"
+                              min={0}
+                              step={0.1}
+                            />
+                          </Td>
                           <Td>
                             <Text color={nextOrder.daysUntilOrder <= 7 ? "red.500" : undefined}>
                               {formatDate(nextOrder.orderDate)}
