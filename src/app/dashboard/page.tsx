@@ -71,6 +71,46 @@ function calculateDailyInventory(item: any, days: number = 100) {
   return dailyInventory;
 }
 
+// Add these utility functions at the top
+function calculateNextOrderInfo(
+  currentStock: number,
+  dailySales: number,
+  safetyStockDays: number,
+  leadTime: number,
+  orderQuantity: number
+) {
+  // Calculate days until safety stock is reached
+  const daysUntilSafetyStock = Math.floor(
+    (currentStock - safetyStockDays * dailySales) / dailySales
+  );
+
+  // Calculate when to place the order (considering lead time)
+  const daysUntilOrder = Math.max(0, daysUntilSafetyStock - leadTime);
+  
+  // Calculate the next order date
+  const orderDate = new Date();
+  orderDate.setDate(orderDate.getDate() + daysUntilOrder);
+  
+  // Calculate the shipping date (order date + lead time)
+  const shipDate = new Date(orderDate);
+  shipDate.setDate(shipDate.getDate() + leadTime);
+
+  return {
+    orderDate,
+    shipDate,
+    orderQuantity,
+    daysUntilOrder,
+  };
+}
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
 export default function Dashboard() {
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
   const [parameters, setParameters] = useState({
@@ -191,77 +231,95 @@ export default function Dashboard() {
                     <Th>SKU</Th>
                     <Th isNumeric>Current Stock</Th>
                     <Th isNumeric>Daily Sales</Th>
-                    <Th isNumeric>Reorder Point</Th>
+                    <Th>Next Order Date</Th>
+                    <Th isNumeric>Order Amount</Th>
+                    <Th>Expected Arrival</Th>
                     <Th>Status</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {inventoryItems.map((item) => (
-                    <React.Fragment key={item.id}>
-                      <Tr>
-                        <Td>{item.name}</Td>
-                        <Td>{item.sku}</Td>
-                        <Td isNumeric>{item.currentStock}</Td>
-                        <Td isNumeric>{item.averageDailySales.toFixed(1)}</Td>
-                        <Td isNumeric>{item.reorderPoint}</Td>
-                        <Td>
-                          <Badge colorScheme={getStatusColor(item.status)}>
-                            {item.status}
-                          </Badge>
-                        </Td>
-                        <Td>
-                          <Button
-                            size="sm"
-                            onClick={() => toggleExpanded(item.id)}
-                            rightIcon={
-                              expanded[item.id] ? (
-                                <Icon as={ChevronUpIcon} />
-                              ) : (
-                                <Icon as={ChevronDownIcon} />
-                              )
-                            }
-                          >
-                            Details
-                          </Button>
-                        </Td>
-                      </Tr>
-                      <Tr>
-                        <Td colSpan={7} p={0}>
-                          <Collapse in={expanded[item.id]} animateOpacity>
-                            <Box p={4} bg={bgColor} borderColor={borderColor}>
-                              <Grid
-                                templateColumns={{
-                                  base: "1fr",
-                                  md: "repeat(2, 1fr)",
-                                }}
-                                gap={4}
-                              >
-                                <Card>
-                                  <CardBody>
-                                    <VStack align="start" spacing={4}>
-                                      <Heading size="sm">
-                                        Stock Analysis
-                                      </Heading>
-                                      <StockoutIndicator
-                                        days={calculateDaysUntilStockout(item)}
-                                      />
-                                      <Text>
-                                        Order Date:{" "}
-                                        {calculateOrderDate(
-                                          calculateDaysUntilStockout(item)
-                                        )}
-                                      </Text>
-                                    </VStack>
-                                  </CardBody>
-                                </Card>
-                              </Grid>
-                            </Box>
-                          </Collapse>
-                        </Td>
-                      </Tr>
-                    </React.Fragment>
-                  ))}
+                  {inventoryItems.map((item) => {
+                    const nextOrder = calculateNextOrderInfo(
+                      item.currentStock,
+                      item.averageDailySales,
+                      parameters.safetyStock,
+                      parameters.leadTime,
+                      parameters.orderQuantity
+                    );
+                    
+                    return (
+                      <React.Fragment key={item.id}>
+                        <Tr>
+                          <Td>{item.name}</Td>
+                          <Td>{item.sku}</Td>
+                          <Td isNumeric>{item.currentStock}</Td>
+                          <Td isNumeric>{item.averageDailySales.toFixed(1)}</Td>
+                          <Td>
+                            <Text color={nextOrder.daysUntilOrder <= 7 ? "red.500" : undefined}>
+                              {formatDate(nextOrder.orderDate)}
+                            </Text>
+                          </Td>
+                          <Td isNumeric>{parameters.orderQuantity}</Td>
+                          <Td>{formatDate(nextOrder.shipDate)}</Td>
+                          <Td>
+                            <Badge colorScheme={getStatusColor(item.status)}>
+                              {item.status}
+                            </Badge>
+                          </Td>
+                          <Td>
+                            <Button
+                              size="sm"
+                              onClick={() => toggleExpanded(item.id)}
+                              rightIcon={
+                                expanded[item.id] ? (
+                                  <Icon as={ChevronUpIcon} />
+                                ) : (
+                                  <Icon as={ChevronDownIcon} />
+                                )
+                              }
+                            >
+                              Details
+                            </Button>
+                          </Td>
+                        </Tr>
+                        <Tr>
+                          <Td colSpan={7} p={0}>
+                            <Collapse in={expanded[item.id]} animateOpacity>
+                              <Box p={4} bg={bgColor} borderColor={borderColor}>
+                                <Grid
+                                  templateColumns={{
+                                    base: "1fr",
+                                    md: "repeat(2, 1fr)",
+                                  }}
+                                  gap={4}
+                                >
+                                  <Card>
+                                    <CardBody>
+                                      <VStack align="start" spacing={4}>
+                                        <Heading size="sm">
+                                          Stock Analysis
+                                        </Heading>
+                                        <StockoutIndicator
+                                          days={calculateDaysUntilStockout(item)}
+                                        />
+                                        <Text>
+                                          Order Date:{" "}
+                                          {calculateOrderDate(
+                                            calculateDaysUntilStockout(item)
+                                          )}
+                                        </Text>
+                                      </VStack>
+                                    </CardBody>
+                                  </Card>
+                                </Grid>
+                              </Box>
+                            </Collapse>
+                          </Td>
+                        </Tr>
+                      </React.Fragment>
+                    );
+                  })}
                 </Tbody>
               </Table>
             </Box>
