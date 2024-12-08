@@ -21,14 +21,14 @@ import {
   ListIcon,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { 
-  FiBarChart2, 
-  FiBox, 
-  FiSmartphone, 
+import {
+  FiBarChart2,
+  FiBox,
+  FiSmartphone,
   FiCheckCircle,
   FiUsers,
   FiShield,
-  FiStar
+  FiStar,
 } from "react-icons/fi";
 
 const themeColors = {
@@ -58,8 +58,7 @@ export default function LandingPage() {
         color="white"
         py={{ base: 8, md: 12 }}
         position="relative"
-        overflow="hidden"
-      >
+        overflow="hidden">
         <Container maxW="container.xl">
           <VStack spacing={6} align="center" textAlign="center">
             <Heading as="h1" size="2xl" mb={4}>
@@ -69,7 +68,9 @@ export default function LandingPage() {
               </Box>
             </Heading>
             <Text fontSize="xl" maxW="2xl" mb={8}>
-              Make data-driven restocking decisions and never run out of inventory again. Perfect timing, optimal quantities, maximum profits.
+              Make data-driven restocking decisions and never run out of
+              inventory again. Perfect timing, optimal quantities, maximum
+              profits.
             </Text>
             <Button
               as={Link}
@@ -77,8 +78,7 @@ export default function LandingPage() {
               size="lg"
               colorScheme="orange"
               bg={themeColors.accent.orange}
-              _hover={{ bg: themeColors.accent.peach }}
-            >
+              _hover={{ bg: themeColors.accent.peach }}>
               Get Started
             </Button>
           </VStack>
@@ -153,8 +153,7 @@ export default function LandingPage() {
           left: 0,
           background:
             "radial-gradient(circle at bottom right, rgba(246, 177, 122, 0.1), transparent 70%)",
-        }}
-      >
+        }}>
         <Container maxW="container.xl">
           <VStack spacing={12}>
             <Heading textAlign="center" mb={8}>
@@ -229,8 +228,7 @@ export default function LandingPage() {
               size="lg"
               colorScheme="orange"
               bg={themeColors.accent.orange}
-              _hover={{ bg: themeColors.accent.peach }}
-            >
+              _hover={{ bg: themeColors.accent.peach }}>
               Try It Free
             </Button>
           </VStack>
@@ -325,8 +323,7 @@ function PricingCard({
     <Card
       bg={featured ? "white" : "gray.100"}
       border={featured ? "2px solid orange.500" : "1px solid gray.200"}
-      boxShadow={featured ? "0 0 10px rgba(0, 0, 0, 0.1)" : "none"}
-    >
+      boxShadow={featured ? "0 0 10px rgba(0, 0, 0, 0.1)" : "none"}>
       <CardBody>
         <Heading size="lg" mb={4}>
           {title}
@@ -350,8 +347,7 @@ function PricingCard({
           size="lg"
           colorScheme={featured ? "orange" : "gray"}
           bg={featured ? "orange.500" : "gray.200"}
-          _hover={{ bg: featured ? "orange.600" : "gray.300" }}
-        >
+          _hover={{ bg: featured ? "orange.600" : "gray.300" }}>
           Get Started
         </Button>
       </CardBody>
