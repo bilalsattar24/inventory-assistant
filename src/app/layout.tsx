@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Html, Head, Main, NextScript } from "next/document";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Html lang="en">
-      <Head>
+    <html lang="en">
+      <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
@@ -44,10 +43,10 @@ export default function RootLayout({
           content="A powerful tool to help Amazon sellers manage their inventory efficiently, ensuring optimal stock levels and timely orders."
         />
         <meta name="twitter:image" content="/path/to/your/image.jpg" />
-      </Head>
+      </head>
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>
-    </Html>
+    </html>
   );
 }
