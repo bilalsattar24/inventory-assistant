@@ -76,36 +76,39 @@ export default function Dashboard() {
   const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
 
   useEffect(() => {
-    calculateInventoryTimeline();
-    calculateOrderShipments();
-  }, [params, weeklyForecasts]);
-
-  const calculateInventoryTimeline = () => {
-    const updatedForecasts = [...weeklyForecasts];
-
-    // Calculate inventory levels and days of stock for each week
-    updatedForecasts.forEach((week, index) => {
+    const updatedForecasts: WeeklyForecast[] = weeklyForecasts.reduce<
+      WeeklyForecast[]
+    >((acc, week, index) => {
       if (index === 0) {
-        week.amazonInventory = params.currentFBAStock;
+        acc.push({
+          ...week,
+          amazonInventory: params.currentFBAStock,
+          daysOfStock: params.currentFBAStock / week.forecastedDailySales,
+        });
       } else {
-        const previousWeek = updatedForecasts[index - 1];
-        week.amazonInventory =
+        const previousWeek = acc[index - 1];
+        const newInventory: number =
           previousWeek.amazonInventory +
           week.incomingShipments -
           previousWeek.forecastedDailySales * 7;
+
+        acc.push({
+          ...week,
+          amazonInventory: newInventory,
+          daysOfStock: newInventory / week.forecastedDailySales,
+        });
       }
+      return acc;
+    }, []);
 
-      week.daysOfStock = week.amazonInventory / week.forecastedDailySales;
-    });
+    // Only update if the values have actually changed
+    if (JSON.stringify(updatedForecasts) !== JSON.stringify(weeklyForecasts)) {
+      setWeeklyForecasts(updatedForecasts);
+    }
 
-    setWeeklyForecasts(updatedForecasts);
-  };
-
-  const calculateOrderShipments = () => {
+    // Calculate order shipments
     const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
     const today = new Date();
-
-    // Calculate DUR (Days Until Reorder)
     const avgDailySales = calculateAverageDailySales(
       today,
       addDays(today, totalLeadTime)
@@ -118,30 +121,33 @@ export default function Dashboard() {
     const orderDate = addDays(today, DUR);
     const shipDate = addDays(orderDate, params.productionLeadTime);
     const arrivalDate = addDays(shipDate, params.shippingLeadTime);
-
-    // Calculate order quantity
     const projectedInventory = calculateProjectedInventory(arrivalDate);
     const orderQuantity = params.maxStockFBA - projectedInventory;
-
-    // Check for low stock alert
     const minInventory = calculateMinInventoryBeforeArrival(today, arrivalDate);
-    const lowStockAlert =
-      minInventory < params.safetyStockDays * avgDailySales
-        ? `Low stock alert: ${Math.floor(
-            minInventory / avgDailySales
-          )} days of stock before arrival`
-        : null;
 
     const newOrderShipment: OrderShipment = {
       orderDate,
       orderQuantity: Math.max(0, orderQuantity),
       shipDate,
       shipQuantity: Math.max(0, orderQuantity),
-      lowStockAlert,
+      lowStockAlert:
+        minInventory < params.safetyStockDays * avgDailySales
+          ? `Low stock alert: ${Math.floor(
+              minInventory / avgDailySales
+            )} days of stock before arrival`
+          : null,
     };
 
     setOrderShipments([newOrderShipment]);
-  };
+  }, [
+    params.safetyStockDays,
+    params.productionLeadTime,
+    params.shippingLeadTime,
+    params.maxStockFBA,
+    params.currentFBAStock,
+    weeklyForecasts.map((f) => f.forecastedDailySales).join(","),
+    weeklyForecasts.map((f) => f.incomingShipments).join(","),
+  ]);
 
   const calculateAverageDailySales = (
     startDate: Date,
@@ -215,9 +221,18 @@ export default function Dashboard() {
       >
     ) =>
     (e: ChangeEvent<HTMLInputElement>) => {
-      const newForecasts = [...weeklyForecasts];
-      newForecasts[index][field] = Number(e.target.value);
-      setWeeklyForecasts(newForecasts);
+      const newValue = Number(e.target.value);
+      setWeeklyForecasts((prevForecasts: WeeklyForecast[]): WeeklyForecast[] =>
+        prevForecasts.map((week, i) => {
+          if (i === index) {
+            return {
+              ...week,
+              [field]: newValue,
+            };
+          }
+          return week;
+        })
+      );
     };
 
   return (
