@@ -1,472 +1,373 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
   Container,
   Table,
-  Td,
-  Tr,
   Thead,
   Tbody,
-  Text,
-  Badge,
-  Slider,
-  SliderTrack,
-  SliderThumb,
-  Grid,
-  Input,
-  Card,
-  CardBody,
-  Button,
-  Tooltip,
-  VStack,
-  HStack,
-  Heading,
-  Collapse,
-  SliderFilledTrack,
+  Tr,
   Th,
-  useColorMode,
-  Icon,
+  Td,
+  Text,
+  Input,
+  Stack,
+  Alert,
+  AlertIcon,
+  IconButton,
+  Collapse,
+  Heading,
+  VStack,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronUpIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { SettingsIcon } from "@chakra-ui/icons";
+import { addDays, startOfWeek, format, differenceInDays } from "date-fns";
 
-// Add these theme colors at the top of the file
-const themeColors = {
-  primary: {
-    main: "#2D3250", // Deep navy blue
-    light: "#424769", // Lighter navy
-    dark: "#1B1F31", // Darker navy
-  },
-  secondary: {
-    main: "#F6B17A", // Warm orange
-    light: "#FFD9B7", // Light peach
-  },
-  success: {
-    main: "#4E9F3D", // Forest green
-    light: "#D7E6D5", // Light sage
-  },
-  warning: {
-    main: "#FF7E67", // Coral
-    light: "#FFB4A2", // Light coral
-  },
-  error: {
-    main: "#E94560", // Ruby red
-    light: "#FFD5DD", // Light pink
-  },
-};
-
-// Add this function to calculate daily inventory levels
-function calculateDailyInventory(item: any, days: number = 100) {
-  const dailyInventory = [];
-  let currentInventory = item.currentStock;
-  const dailySales = item.averageDailySales;
-
-  for (let i = 0; i < days; i++) {
-    dailyInventory.push({
-      day: i,
-      inventory: Math.max(0, currentInventory - dailySales * i),
-    });
-  }
-
-  return dailyInventory;
+interface InventoryParams {
+  safetyStockDays: number;
+  productionLeadTime: number;
+  shippingLeadTime: number;
+  maxStockFBA: number;
+  currentFBAStock: number;
 }
 
-// Add these utility functions at the top
-function calculateNextOrderInfo(
-  currentStock: number,
-  dailySales: number,
-  safetyStockDays: number,
-  leadTime: number
-) {
-  // Calculate days until safety stock is reached
-  const daysUntilSafetyStock = Math.floor(
-    (currentStock - safetyStockDays * dailySales) / dailySales
-  );
-
-  // Calculate when to place the order (considering lead time)
-  const daysUntilOrder = Math.max(0, daysUntilSafetyStock - leadTime);
-  
-  // Calculate the next order date
-  const orderDate = new Date();
-  orderDate.setDate(orderDate.getDate() + daysUntilOrder);
-  
-  // Calculate the shipping date (order date + lead time)
-  const shipDate = new Date(orderDate);
-  shipDate.setDate(shipDate.getDate() + leadTime);
-
-  // Calculate optimal order quantity:
-  // Cover lead time + safety stock period + 30 days of sales
-  const orderQuantity = Math.ceil(dailySales * (leadTime + safetyStockDays + 30));
-
-  return {
-    orderDate,
-    shipDate,
-    orderQuantity,
-    daysUntilOrder,
-  };
+interface WeeklyForecast {
+  date: Date;
+  incomingShipments: number;
+  amazonInventory: number;
+  forecastedDailySales: number;
+  daysOfStock: number;
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
-}
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  sku: string;
-  currentStock: number;
-  averageDailySales: number;
-  status: string;
+interface OrderShipment {
+  orderDate: Date;
+  orderQuantity: number;
+  shipDate: Date;
+  shipQuantity: number;
+  lowStockAlert: string | null;
 }
 
 export default function Dashboard() {
-  const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
-  const [parameters, setParameters] = useState({
-    leadTime: 30,
-    safetyStock: 14,
+  const [showParams, setShowParams] = useState(false);
+  const [params, setParams] = useState<InventoryParams>({
+    safetyStockDays: 30,
+    productionLeadTime: 60,
+    shippingLeadTime: 30,
+    maxStockFBA: 1000,
+    currentFBAStock: 500,
   });
 
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
-    {
-      id: "1",
-      name: "Product A",
-      sku: "SKU001",
-      currentStock: 150,
-      averageDailySales: 2.5,
-      status: "Healthy",
-    },
-    {
-      id: "2",
-      name: "Product B",
-      sku: "SKU002",
-      currentStock: 50,
-      averageDailySales: 3,
-      status: "Warning",
-    },
-    {
-      id: "3",
-      name: "Product C",
-      sku: "SKU003",
-      currentStock: 25,
-      averageDailySales: 1.5,
-      status: "Critical",
-    },
-  ]);
-
-  const handleInventoryChange = (
-    id: string,
-    field: "currentStock" | "averageDailySales",
-    value: string
-  ) => {
-    const numValue = Number(value);
-    if (isNaN(numValue) || numValue < 0) return;
-
-    setInventoryItems((items) =>
-      items.map((item) => {
-        if (item.id === id) {
-          const updatedItem = { ...item, [field]: numValue };
-          // Update status based on new values
-          const daysOfStock = updatedItem.currentStock / updatedItem.averageDailySales;
-          updatedItem.status = 
-            daysOfStock > 45 ? "Healthy" :
-            daysOfStock > 30 ? "Warning" : "Critical";
-          return updatedItem;
-        }
-        return item;
-      })
-    );
-  };
-
-  const toggleExpanded = (id: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleParameterChange = (
-    parameter: keyof typeof parameters,
-    value: number
-  ) => {
-    setParameters((prev) => ({ ...prev, [parameter]: value }));
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "healthy":
-        return "green";
-      case "warning":
-        return "yellow";
-      case "critical":
-        return "red";
-      default:
-        return "gray";
+  const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(
+    () => {
+      // Initialize 12 weeks of forecasts
+      const startDate = startOfWeek(new Date());
+      return Array.from({ length: 12 }, (_, i) => ({
+        date: addDays(startDate, i * 7),
+        incomingShipments: 0,
+        amazonInventory: i === 0 ? params.currentFBAStock : 0,
+        forecastedDailySales: 10, // Default forecast
+        daysOfStock: 0,
+      }));
     }
+  );
+
+  const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
+
+  useEffect(() => {
+    calculateInventoryTimeline();
+    calculateOrderShipments();
+  }, [params, weeklyForecasts]);
+
+  const calculateInventoryTimeline = () => {
+    const updatedForecasts = [...weeklyForecasts];
+
+    // Calculate inventory levels and days of stock for each week
+    updatedForecasts.forEach((week, index) => {
+      if (index === 0) {
+        week.amazonInventory = params.currentFBAStock;
+      } else {
+        const previousWeek = updatedForecasts[index - 1];
+        week.amazonInventory =
+          previousWeek.amazonInventory +
+          week.incomingShipments -
+          previousWeek.forecastedDailySales * 7;
+      }
+
+      week.daysOfStock = week.amazonInventory / week.forecastedDailySales;
+    });
+
+    setWeeklyForecasts(updatedForecasts);
   };
 
-  const calculateDaysUntilStockout = (item: any) => {
-    return Math.floor(item.currentStock / item.averageDailySales);
+  const calculateOrderShipments = () => {
+    const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
+    const today = new Date();
+
+    // Calculate DUR (Days Until Reorder)
+    const avgDailySales = calculateAverageDailySales(
+      today,
+      addDays(today, totalLeadTime)
+    );
+    const DUR = Math.floor(
+      (params.currentFBAStock - params.safetyStockDays * avgDailySales) /
+        avgDailySales
+    );
+
+    const orderDate = addDays(today, DUR);
+    const shipDate = addDays(orderDate, params.productionLeadTime);
+    const arrivalDate = addDays(shipDate, params.shippingLeadTime);
+
+    // Calculate order quantity
+    const projectedInventory = calculateProjectedInventory(arrivalDate);
+    const orderQuantity = params.maxStockFBA - projectedInventory;
+
+    // Check for low stock alert
+    const minInventory = calculateMinInventoryBeforeArrival(today, arrivalDate);
+    const lowStockAlert =
+      minInventory < params.safetyStockDays * avgDailySales
+        ? `Low stock alert: ${Math.floor(
+            minInventory / avgDailySales
+          )} days of stock before arrival`
+        : null;
+
+    const newOrderShipment: OrderShipment = {
+      orderDate,
+      orderQuantity: Math.max(0, orderQuantity),
+      shipDate,
+      shipQuantity: Math.max(0, orderQuantity),
+      lowStockAlert,
+    };
+
+    setOrderShipments([newOrderShipment]);
   };
 
-  const { colorMode } = useColorMode();
-  const bgColor = colorMode === "light" ? "white" : "gray.800";
-  const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
+  const calculateAverageDailySales = (
+    startDate: Date,
+    endDate: Date
+  ): number => {
+    const days = differenceInDays(endDate, startDate);
+    let totalSales = 0;
+    let daysCount = 0;
+
+    weeklyForecasts.forEach((week) => {
+      const weekStart = week.date;
+      const weekEnd = addDays(weekStart, 7);
+
+      if (weekStart <= endDate && weekEnd >= startDate) {
+        const overlapStart = Math.max(startDate.getTime(), weekStart.getTime());
+        const overlapEnd = Math.min(endDate.getTime(), weekEnd.getTime());
+        const overlapDays = Math.ceil(
+          (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24)
+        );
+
+        totalSales += week.forecastedDailySales * overlapDays;
+        daysCount += overlapDays;
+      }
+    });
+
+    return daysCount > 0 ? totalSales / daysCount : 0;
+  };
+
+  const calculateProjectedInventory = (date: Date): number => {
+    let inventory = params.currentFBAStock;
+    const today = new Date();
+
+    weeklyForecasts.forEach((week) => {
+      if (week.date >= today && week.date <= date) {
+        inventory -= week.forecastedDailySales * 7;
+        inventory += week.incomingShipments;
+      }
+    });
+
+    return inventory;
+  };
+
+  const calculateMinInventoryBeforeArrival = (
+    startDate: Date,
+    arrivalDate: Date
+  ): number => {
+    let minInventory = params.currentFBAStock;
+    let currentInventory = params.currentFBAStock;
+
+    weeklyForecasts.forEach((week) => {
+      if (week.date >= startDate && week.date <= arrivalDate) {
+        currentInventory -= week.forecastedDailySales * 7;
+        minInventory = Math.min(minInventory, currentInventory);
+      }
+    });
+
+    return minInventory;
+  };
+
+  const handleParamChange =
+    (param: keyof InventoryParams) => (e: ChangeEvent<HTMLInputElement>) => {
+      setParams({ ...params, [param]: Number(e.target.value) });
+    };
+
+  const handleForecastChange =
+    (
+      index: number,
+      field: keyof Pick<
+        WeeklyForecast,
+        "incomingShipments" | "forecastedDailySales"
+      >
+    ) =>
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newForecasts = [...weeklyForecasts];
+      newForecasts[index][field] = Number(e.target.value);
+      setWeeklyForecasts(newForecasts);
+    };
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <VStack align="stretch">
-        <Box>
-          <Heading size="lg" mb={6}>
-            Inventory Dashboard
-          </Heading>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
-            <ParameterCard
-              title="Lead Time"
-              value={parameters.leadTime}
-              onChange={(value) => handleParameterChange("leadTime", value)}
-              min={1}
-              max={90}
-              step={1}
-              tooltip="Average time in days from order placement to delivery"
-            />
-            <ParameterCard
-              title="Safety Stock Days"
-              value={parameters.safetyStock}
-              onChange={(value) => handleParameterChange("safetyStock", value)}
-              min={0}
-              max={30}
-              step={1}
-              tooltip="Buffer stock to maintain for unexpected demand or delays"
-            />
-          </Grid>
+    <Container maxW="container.xl" py={4}>
+      {/* Parameters Section */}
+      <Box mb={4}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}>
+          <Heading size="lg">Inventory Management Dashboard</Heading>
+          <IconButton
+            aria-label="Settings"
+            icon={<SettingsIcon />}
+            onClick={() => setShowParams(!showParams)}
+          />
         </Box>
 
-        <Card variant="outline">
-          <CardBody>
-            <Box overflowX="auto">
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Product Name</Th>
-                    <Th>SKU</Th>
-                    <Th isNumeric>Current Stock</Th>
-                    <Th isNumeric>Daily Sales</Th>
-                    <Th>Next Order Date</Th>
-                    <Th isNumeric>Recommended Order</Th>
-                    <Th>Expected Arrival</Th>
-                    <Th>Status</Th>
-                    <Th>Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {inventoryItems.map((item) => {
-                    const nextOrder = calculateNextOrderInfo(
-                      item.currentStock,
-                      item.averageDailySales,
-                      parameters.safetyStock,
-                      parameters.leadTime
-                    );
-                    
-                    return (
-                      <React.Fragment key={item.id}>
-                        <Tr>
-                          <Td>{item.name}</Td>
-                          <Td>{item.sku}</Td>
-                          <Td isNumeric>
-                            <Input
-                              type="number"
-                              value={item.currentStock}
-                              onChange={(e) => 
-                                handleInventoryChange(item.id, "currentStock", e.target.value)
-                              }
-                              size="sm"
-                              width="80px"
-                              textAlign="right"
-                              min={0}
-                            />
-                          </Td>
-                          <Td isNumeric>
-                            <Input
-                              type="number"
-                              value={item.averageDailySales}
-                              onChange={(e) => 
-                                handleInventoryChange(item.id, "averageDailySales", e.target.value)
-                              }
-                              size="sm"
-                              width="80px"
-                              textAlign="right"
-                              min={0}
-                              step={0.1}
-                            />
-                          </Td>
-                          <Td>
-                            <Text color={nextOrder.daysUntilOrder <= 7 ? "red.500" : undefined}>
-                              {formatDate(nextOrder.orderDate)}
-                            </Text>
-                          </Td>
-                          <Td isNumeric>
-                            <Text fontWeight="semibold">
-                              {nextOrder.orderQuantity}
-                            </Text>
-                          </Td>
-                          <Td>{formatDate(nextOrder.shipDate)}</Td>
-                          <Td>
-                            <Badge colorScheme={getStatusColor(item.status)}>
-                              {item.status}
-                            </Badge>
-                          </Td>
-                          <Td>
-                            <Button
-                              size="sm"
-                              onClick={() => toggleExpanded(item.id)}
-                              rightIcon={
-                                expanded[item.id] ? (
-                                  <Icon as={ChevronUpIcon} />
-                                ) : (
-                                  <Icon as={ChevronDownIcon} />
-                                )
-                              }
-                            >
-                              Details
-                            </Button>
-                          </Td>
-                        </Tr>
-                        <Tr>
-                          <Td colSpan={7} p={0}>
-                            <Collapse in={expanded[item.id]} animateOpacity>
-                              <Box p={4} bg={bgColor} borderColor={borderColor}>
-                                <Grid
-                                  templateColumns={{
-                                    base: "1fr",
-                                    md: "repeat(2, 1fr)",
-                                  }}
-                                  gap={4}
-                                >
-                                  <Card>
-                                    <CardBody>
-                                      <VStack align="start" spacing={4}>
-                                        <Heading size="sm">
-                                          Stock Analysis
-                                        </Heading>
-                                        <StockoutIndicator
-                                          days={calculateDaysUntilStockout(item)}
-                                        />
-                                        <Text>
-                                          Order Date:{" "}
-                                          {calculateOrderDate(
-                                            calculateDaysUntilStockout(item)
-                                          )}
-                                        </Text>
-                                      </VStack>
-                                    </CardBody>
-                                  </Card>
-                                </Grid>
-                              </Box>
-                            </Collapse>
-                          </Td>
-                        </Tr>
-                      </React.Fragment>
-                    );
-                  })}
-                </Tbody>
-              </Table>
-            </Box>
-          </CardBody>
-        </Card>
-      </VStack>
+        <Collapse in={showParams}>
+          <Box p={6} mb={3} shadow="md" borderWidth="1px" borderRadius="md">
+            <VStack spacing={4}>
+              <Input
+                type="number"
+                placeholder="Safety Stock (days)"
+                value={params.safetyStockDays}
+                onChange={handleParamChange("safetyStockDays")}
+              />
+              <Input
+                type="number"
+                placeholder="Production Lead Time (days)"
+                value={params.productionLeadTime}
+                onChange={handleParamChange("productionLeadTime")}
+              />
+              <Input
+                type="number"
+                placeholder="Shipping Lead Time (days)"
+                value={params.shippingLeadTime}
+                onChange={handleParamChange("shippingLeadTime")}
+              />
+              <Input
+                type="number"
+                placeholder="Max Stock at Amazon FBA"
+                value={params.maxStockFBA}
+                onChange={handleParamChange("maxStockFBA")}
+              />
+              <Input
+                type="number"
+                placeholder="Current FBA Stock"
+                value={params.currentFBAStock}
+                onChange={handleParamChange("currentFBAStock")}
+              />
+            </VStack>
+          </Box>
+        </Collapse>
+      </Box>
+
+      {/* Orders and Shipments Table */}
+      <Heading size="md" mb={4}>
+        Orders and Shipments
+      </Heading>
+      <Box
+        mb={4}
+        shadow="md"
+        borderWidth="1px"
+        borderRadius="md"
+        overflow="auto">
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Order Date</Th>
+              <Th>Order Quantity</Th>
+              <Th>Ship Date</Th>
+              <Th>Ship Quantity</Th>
+              <Th>Low Stock Alert</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {orderShipments.map((shipment, index) => (
+              <Tr key={index}>
+                <Td>{format(shipment.orderDate, "MM/dd/yyyy")}</Td>
+                <Td>{shipment.orderQuantity}</Td>
+                <Td>{format(shipment.shipDate, "MM/dd/yyyy")}</Td>
+                <Td>{shipment.shipQuantity}</Td>
+                <Td>
+                  {shipment.lowStockAlert && (
+                    <Alert status="error" variant="subtle">
+                      <AlertIcon />
+                      {shipment.lowStockAlert}
+                    </Alert>
+                  )}
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
+
+      {/* Forecast and Inventory Timeline Table */}
+      <Heading size="md" mb={4}>
+        Forecast and Inventory Timeline
+      </Heading>
+      <Box shadow="md" borderWidth="1px" borderRadius="md" overflow="auto">
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Week Starting</Th>
+              <Th>Incoming Shipments</Th>
+              <Th>Amazon Inventory</Th>
+              <Th>Forecasted Daily Sales</Th>
+              <Th>Days of Stock</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {weeklyForecasts.map((week, index) => (
+              <Tr key={index}>
+                <Td>{format(week.date, "MM/dd/yyyy")}</Td>
+                <Td>
+                  <Input
+                    type="number"
+                    size="sm"
+                    value={week.incomingShipments}
+                    onChange={handleForecastChange(index, "incomingShipments")}
+                  />
+                </Td>
+                <Td>{Math.round(week.amazonInventory)}</Td>
+                <Td>
+                  <Input
+                    type="number"
+                    size="sm"
+                    value={week.forecastedDailySales}
+                    onChange={handleForecastChange(
+                      index,
+                      "forecastedDailySales"
+                    )}
+                  />
+                </Td>
+                <Td
+                  bg={
+                    week.daysOfStock <= params.safetyStockDays
+                      ? "red.100"
+                      : week.daysOfStock >=
+                        params.maxStockFBA / week.forecastedDailySales
+                      ? "yellow.100"
+                      : undefined
+                  }>
+                  {Math.round(week.daysOfStock)}
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
     </Container>
   );
-}
-
-function ParameterCard({
-  title,
-  value,
-  onChange,
-  min,
-  max,
-  step,
-  tooltip,
-}: {
-  title: string;
-  value: number;
-  onChange: (value: number) => void;
-  min: number;
-  max: number;
-  step: number;
-  tooltip: string;
-}) {
-  return (
-    <Card>
-      <CardBody>
-        <VStack spacing={4}>
-          <HStack>
-            <Text fontWeight="semibold">{title}</Text>
-            <Tooltip label={tooltip}>
-              <Box as="span">
-                <Icon as={InfoOutlineIcon} color="gray.500" />
-              </Box>
-            </Tooltip>
-          </HStack>
-          <HStack w="100%" spacing={4}>
-            <Input
-              type="number"
-              value={value}
-              onChange={(e) => onChange(Number(e.target.value))}
-              min={min}
-              max={max}
-              step={step}
-              width="80px"
-            />
-            <Slider
-              flex="1"
-              value={value}
-              onChange={onChange}
-              min={min}
-              max={max}
-              step={step}
-            >
-              <SliderTrack>
-                <SliderFilledTrack />
-              </SliderTrack>
-              <SliderThumb />
-            </Slider>
-          </HStack>
-        </VStack>
-      </CardBody>
-    </Card>
-  );
-}
-
-function StockoutIndicator({ days }: { days: number }) {
-  const getStockoutStatus = () => {
-    if (days > 30) {
-      return { color: "green", message: "Healthy" };
-    } else if (days > 14) {
-      return { color: "yellow", message: "Monitor" };
-    } else {
-      return { color: "red", message: "Critical" };
-    }
-  };
-
-  const status = getStockoutStatus();
-
-  return (
-    <HStack spacing={2}>
-      <Text>Days until stockout:</Text>
-      <Badge colorScheme={status.color}>
-        {days} days ({status.message})
-      </Badge>
-    </HStack>
-  );
-}
-
-function calculateOrderDate(daysUntilStockout: number): string {
-  const orderDate = new Date();
-  orderDate.setDate(orderDate.getDate() + daysUntilStockout);
-  return orderDate.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }
