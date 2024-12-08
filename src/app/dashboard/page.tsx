@@ -18,6 +18,9 @@ import {
   Collapse,
   Heading,
   VStack,
+  FormControl,
+  FormLabel,
+  FormHelperText,
 } from "@chakra-ui/react";
 import { SettingsIcon } from "@chakra-ui/icons";
 import { addDays, startOfWeek, format, differenceInDays } from "date-fns";
@@ -236,37 +239,66 @@ export default function Dashboard() {
 
         <Collapse in={showParams}>
           <Box p={6} mb={3} shadow="md" borderWidth="1px" borderRadius="md">
-            <VStack spacing={4}>
-              <Input
-                type="number"
-                placeholder="Safety Stock (days)"
-                value={params.safetyStockDays}
-                onChange={handleParamChange("safetyStockDays")}
-              />
-              <Input
-                type="number"
-                placeholder="Production Lead Time (days)"
-                value={params.productionLeadTime}
-                onChange={handleParamChange("productionLeadTime")}
-              />
-              <Input
-                type="number"
-                placeholder="Shipping Lead Time (days)"
-                value={params.shippingLeadTime}
-                onChange={handleParamChange("shippingLeadTime")}
-              />
-              <Input
-                type="number"
-                placeholder="Max Stock at Amazon FBA"
-                value={params.maxStockFBA}
-                onChange={handleParamChange("maxStockFBA")}
-              />
-              <Input
-                type="number"
-                placeholder="Current FBA Stock"
-                value={params.currentFBAStock}
-                onChange={handleParamChange("currentFBAStock")}
-              />
+            <VStack spacing={6} align="stretch">
+              <FormControl>
+                <FormLabel>Safety Stock (days)</FormLabel>
+                <Input
+                  type="number"
+                  value={params.safetyStockDays}
+                  onChange={handleParamChange("safetyStockDays")}
+                />
+                <FormHelperText>
+                  Minimum number of days of inventory you want to maintain
+                </FormHelperText>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Production Lead Time (days)</FormLabel>
+                <Input
+                  type="number"
+                  value={params.productionLeadTime}
+                  onChange={handleParamChange("productionLeadTime")}
+                />
+                <FormHelperText>
+                  Time needed for production to complete an order
+                </FormHelperText>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Shipping Lead Time (days)</FormLabel>
+                <Input
+                  type="number"
+                  value={params.shippingLeadTime}
+                  onChange={handleParamChange("shippingLeadTime")}
+                />
+                <FormHelperText>
+                  Time needed to ship from factory to Amazon FBA
+                </FormHelperText>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Max Stock at Amazon FBA (units)</FormLabel>
+                <Input
+                  type="number"
+                  value={params.maxStockFBA}
+                  onChange={handleParamChange("maxStockFBA")}
+                />
+                <FormHelperText>
+                  Maximum inventory units you want to store at Amazon FBA
+                </FormHelperText>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Current FBA Stock (units)</FormLabel>
+                <Input
+                  type="number"
+                  value={params.currentFBAStock}
+                  onChange={handleParamChange("currentFBAStock")}
+                />
+                <FormHelperText>
+                  Current inventory units at Amazon FBA
+                </FormHelperText>
+              </FormControl>
             </VStack>
           </Box>
         </Collapse>
