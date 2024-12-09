@@ -368,31 +368,53 @@ export default function Dashboard() {
         <Table variant="simple">
           <Thead>
             <Tr>
-              <Th>Week Starting</Th>
-              <Th>Incoming Shipments</Th>
-              <Th>Amazon Inventory</Th>
-              <Th>Forecasted Daily Sales</Th>
-              <Th>Days of Stock</Th>
+              <Th fontSize="md" fontWeight="bold">
+                Week Starting
+              </Th>
+              <Th fontSize="md" fontWeight="bold">
+                Incoming Shipments
+              </Th>
+              <Th fontSize="md" fontWeight="bold">
+                Amazon Inventory
+              </Th>
+              <Th fontSize="md" fontWeight="bold">
+                Forecasted Daily Sales
+              </Th>
+              <Th fontSize="md" fontWeight="bold">
+                Days of Stock
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
             {weeklyForecasts.map((week, index) => (
               <Tr key={index}>
-                <Td>{format(week.date, "MM/dd/yyyy")}</Td>
+                <Td fontSize="md" fontWeight="medium">
+                  {format(week.date, "MM/dd/yyyy")}
+                </Td>
                 <Td>
                   <Input
                     type="number"
-                    size="sm"
-                    value={week.incomingShipments}
+                    size="md"
+                    fontSize="md"
+                    fontWeight="medium"
+                    value={
+                      week.incomingShipments === 0
+                        ? ""
+                        : week.incomingShipments.toString()
+                    }
                     onChange={handleForecastChange(index, "incomingShipments")}
                   />
                 </Td>
-                <Td>{Math.round(week.amazonInventory)}</Td>
+                <Td fontSize="md" fontWeight="medium">
+                  {Math.round(week.amazonInventory)}
+                </Td>
                 <Td>
                   <Input
                     type="number"
-                    size="sm"
-                    value={week.forecastedDailySales}
+                    size="md"
+                    fontSize="md"
+                    fontWeight="medium"
+                    value={week.forecastedDailySales.toString()}
                     onChange={handleForecastChange(
                       index,
                       "forecastedDailySales"
@@ -400,6 +422,8 @@ export default function Dashboard() {
                   />
                 </Td>
                 <Td
+                  fontSize="md"
+                  fontWeight="medium"
                   bg={
                     week.daysOfStock <= params.safetyStockDays
                       ? "red.100"
