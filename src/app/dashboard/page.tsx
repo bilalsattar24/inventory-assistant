@@ -29,7 +29,7 @@ interface InventoryParams {
   safetyStockDays: number;
   productionLeadTime: number;
   shippingLeadTime: number;
-  maxStockFBA: number;
+  maxStockDays: number;
   currentFBAStock: number;
 }
 
@@ -55,7 +55,7 @@ export default function Dashboard() {
     safetyStockDays: 30,
     productionLeadTime: 60,
     shippingLeadTime: 30,
-    maxStockFBA: 1000,
+    maxStockDays: 90,
     currentFBAStock: 500,
   });
 
@@ -122,7 +122,10 @@ export default function Dashboard() {
     const shipDate = addDays(orderDate, params.productionLeadTime);
     const arrivalDate = addDays(shipDate, params.shippingLeadTime);
     const projectedInventory = calculateProjectedInventory(arrivalDate);
-    const orderQuantity = params.maxStockFBA - projectedInventory;
+    const projectedDaysOfStock = projectedInventory / avgDailySales;
+    const orderQuantity = Math.ceil(
+      (params.maxStockDays - projectedDaysOfStock) * avgDailySales
+    );
     const minInventory = calculateMinInventoryBeforeArrival(today, arrivalDate);
 
     const newOrderShipment: OrderShipment = {
@@ -143,7 +146,7 @@ export default function Dashboard() {
     params.safetyStockDays,
     params.productionLeadTime,
     params.shippingLeadTime,
-    params.maxStockFBA,
+    params.maxStockDays,
     params.currentFBAStock,
     weeklyForecasts.map((f) => f.forecastedDailySales).join(","),
     weeklyForecasts.map((f) => f.incomingShipments).join(","),
@@ -292,14 +295,15 @@ export default function Dashboard() {
               </FormControl>
 
               <FormControl>
-                <FormLabel>Max Stock at Amazon FBA (units)</FormLabel>
+                <FormLabel>Max Stock Days</FormLabel>
                 <Input
                   type="number"
-                  value={params.maxStockFBA}
-                  onChange={handleParamChange("maxStockFBA")}
+                  value={params.maxStockDays}
+                  onChange={handleParamChange("maxStockDays")}
                 />
                 <FormHelperText>
-                  Maximum inventory units you want to store at Amazon FBA
+                  Maximum number of days of inventory you want to store at
+                  Amazon FBA
                 </FormHelperText>
               </FormControl>
 
@@ -428,7 +432,7 @@ export default function Dashboard() {
                     week.daysOfStock <= params.safetyStockDays
                       ? "red.100"
                       : week.daysOfStock >=
-                        params.maxStockFBA / week.forecastedDailySales
+                        params.maxStockDays / week.forecastedDailySales
                       ? "yellow.100"
                       : undefined
                   }>
