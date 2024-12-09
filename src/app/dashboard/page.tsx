@@ -52,11 +52,11 @@ interface OrderShipment {
 export default function Dashboard() {
   const [showParams, setShowParams] = useState(false);
   const [params, setParams] = useState<InventoryParams>({
-    safetyStockDays: 30,
-    productionLeadTime: 60,
-    shippingLeadTime: 30,
-    maxStockDays: 90,
-    currentFBAStock: 500,
+    safetyStockDays: 45,
+    productionLeadTime: 30,
+    shippingLeadTime: 50,
+    maxStockDays: 100,
+    currentFBAStock: 1200,
   });
 
   const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(
