@@ -63,7 +63,7 @@ export default function Dashboard() {
     () => {
       // Initialize 12 weeks of forecasts
       const startDate = startOfWeek(new Date());
-      return Array.from({ length: 24 }, (_, i) => ({
+      return Array.from({ length: 48 }, (_, i) => ({
         date: addDays(startDate, i * 7),
         incomingShipments: 0,
         amazonInventory: i === 0 ? params.currentFBAStock : 0,
@@ -79,46 +79,66 @@ export default function Dashboard() {
     // Calculate order shipments
     const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
     const today = new Date();
-    const avgDailySales = calculateAverageDailySales(
-      today,
-      addDays(today, totalLeadTime)
-    );
+    const orders: OrderShipment[] = [];
 
-    // Find when we'll hit safety stock
-    let daysUntilSafetyStock = Math.floor(
-      (params.currentFBAStock - params.safetyStockDays * avgDailySales) /
-        avgDailySales
-    );
+    // Simulate inventory over time to determine when orders are needed
+    let simulatedInventory = params.currentFBAStock;
+    let currentDate = today;
+    const endDate = addDays(today, 48 * 7); // 48 weeks
 
-    // Calculate dates working backwards from when we need inventory to arrive
-    const requiredArrivalDate = addDays(today, daysUntilSafetyStock);
-    const shipDate = addDays(requiredArrivalDate, -params.shippingLeadTime);
-    const orderDate = addDays(shipDate, -params.productionLeadTime);
+    while (currentDate < endDate) {
+      const avgDailySales = calculateAverageDailySales(
+        currentDate,
+        addDays(currentDate, totalLeadTime)
+      );
 
-    const projectedInventory = calculateProjectedInventory(requiredArrivalDate);
-    const projectedDaysOfStock = projectedInventory / avgDailySales;
-    const orderQuantity = Math.ceil(
-      (params.maxStockDays - projectedDaysOfStock) * avgDailySales
-    );
-    const minInventory = calculateMinInventoryBeforeArrival(
-      today,
-      requiredArrivalDate
-    );
+      // Calculate days until we hit safety stock
+      const daysUntilSafetyStock = Math.floor(
+        (simulatedInventory - params.safetyStockDays * avgDailySales) /
+          avgDailySales
+      );
 
-    const newOrderShipment: OrderShipment = {
-      orderDate,
-      orderQuantity: Math.max(0, orderQuantity),
-      shipDate,
-      shipQuantity: Math.max(0, orderQuantity),
-      lowStockAlert:
-        minInventory < params.safetyStockDays * avgDailySales
-          ? `Low stock alert: ${Math.floor(
-              minInventory / avgDailySales
-            )} days of stock before arrival`
-          : null,
-    };
+      if (daysUntilSafetyStock <= totalLeadTime) {
+        // We need to place an order
+        const requiredArrivalDate = addDays(currentDate, daysUntilSafetyStock);
+        const shipDate = addDays(requiredArrivalDate, -params.shippingLeadTime);
+        const orderDate = addDays(shipDate, -params.productionLeadTime);
 
-    setOrderShipments([newOrderShipment]);
+        // Calculate order quantity
+        const projectedInventory =
+          simulatedInventory - avgDailySales * daysUntilSafetyStock;
+        const projectedDaysOfStock = projectedInventory / avgDailySales;
+        const orderQuantity = Math.ceil(
+          (params.maxStockDays - projectedDaysOfStock) * avgDailySales
+        );
+
+        // Add the order
+        const newOrder: OrderShipment = {
+          orderDate,
+          orderQuantity: Math.max(0, orderQuantity),
+          shipDate,
+          shipQuantity: Math.max(0, orderQuantity),
+          lowStockAlert:
+            projectedInventory < params.safetyStockDays * avgDailySales
+              ? `Low stock alert: ${Math.floor(
+                  projectedInventory / avgDailySales
+                )} days of stock before arrival`
+              : null,
+        };
+
+        orders.push(newOrder);
+
+        // Update simulated inventory
+        simulatedInventory = projectedInventory + orderQuantity;
+        currentDate = addDays(currentDate, daysUntilSafetyStock + 1);
+      } else {
+        // Move forward in time
+        currentDate = addDays(currentDate, 7);
+        simulatedInventory -= avgDailySales * 7;
+      }
+    }
+
+    setOrderShipments(orders);
   }, [
     params.safetyStockDays,
     params.productionLeadTime,
