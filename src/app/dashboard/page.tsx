@@ -76,65 +76,6 @@ export default function Dashboard() {
   const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
 
   useEffect(() => {
-    // First, reset all incoming shipments to 0
-    const updatedForecasts = weeklyForecasts.map((week) => ({
-      ...week,
-      incomingShipments: 0,
-    }));
-
-    // Add incoming shipments based on order shipments
-    orderShipments.forEach((shipment) => {
-      const shipmentArrivalDate = addDays(
-        shipment.shipDate,
-        params.shippingLeadTime
-      );
-      const weekIndex = updatedForecasts.findIndex((week) => {
-        const weekEnd = addDays(week.date, 6);
-        return (
-          shipmentArrivalDate >= week.date && shipmentArrivalDate <= weekEnd
-        );
-      });
-
-      if (weekIndex !== -1) {
-        updatedForecasts[weekIndex] = {
-          ...updatedForecasts[weekIndex],
-          incomingShipments: shipment.shipQuantity,
-        };
-      }
-    });
-
-    // Calculate inventory levels and days of stock
-    const finalForecasts = updatedForecasts.reduce<WeeklyForecast[]>(
-      (acc, week, index) => {
-        if (index === 0) {
-          acc.push({
-            ...week,
-            amazonInventory: params.currentFBAStock,
-            daysOfStock: params.currentFBAStock / week.forecastedDailySales,
-          });
-        } else {
-          const previousWeek = acc[index - 1];
-          const newInventory: number =
-            previousWeek.amazonInventory +
-            week.incomingShipments -
-            previousWeek.forecastedDailySales * 7;
-
-          acc.push({
-            ...week,
-            amazonInventory: newInventory,
-            daysOfStock: newInventory / week.forecastedDailySales,
-          });
-        }
-        return acc;
-      },
-      []
-    );
-
-    // Only update if the values have actually changed
-    if (JSON.stringify(finalForecasts) !== JSON.stringify(weeklyForecasts)) {
-      setWeeklyForecasts(finalForecasts);
-    }
-
     // Calculate order shipments
     const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
     const today = new Date();
@@ -186,6 +127,67 @@ export default function Dashboard() {
     params.currentFBAStock,
     weeklyForecasts.map((f) => f.forecastedDailySales).join(","),
   ]);
+
+  useEffect(() => {
+    // First, reset all incoming shipments to 0
+    const updatedForecasts = weeklyForecasts.map((week) => ({
+      ...week,
+      incomingShipments: 0,
+    }));
+
+    // Add incoming shipments based on order shipments
+    orderShipments.forEach((shipment) => {
+      const shipmentArrivalDate = addDays(
+        shipment.shipDate,
+        params.shippingLeadTime
+      );
+      const weekIndex = updatedForecasts.findIndex((week) => {
+        const weekEnd = addDays(week.date, 6);
+        return (
+          shipmentArrivalDate >= week.date && shipmentArrivalDate <= weekEnd
+        );
+      });
+
+      if (weekIndex !== -1) {
+        updatedForecasts[weekIndex] = {
+          ...updatedForecasts[weekIndex],
+          incomingShipments: shipment.shipQuantity,
+        };
+      }
+    });
+
+    // Calculate inventory levels and days of stock
+    const finalForecasts = updatedForecasts.reduce<WeeklyForecast[]>(
+      (acc, week, index) => {
+        if (index === 0) {
+          acc.push({
+            ...week,
+            amazonInventory: params.currentFBAStock,
+            daysOfStock: params.currentFBAStock / week.forecastedDailySales,
+          });
+        } else {
+          const previousWeek = acc[index - 1];
+          const newInventory: number =
+            previousWeek.amazonInventory -
+            previousWeek.forecastedDailySales * 7 +
+            week.incomingShipments;
+
+          acc.push({
+            ...week,
+            amazonInventory: newInventory,
+            daysOfStock: newInventory / week.forecastedDailySales,
+          });
+        }
+        return acc;
+      },
+      []
+    );
+
+    // Only update if the values have actually changed
+    if (JSON.stringify(finalForecasts) !== JSON.stringify(weeklyForecasts)) {
+      setWeeklyForecasts(finalForecasts);
+    }
+  }, [orderShipments, params.shippingLeadTime, params.currentFBAStock]);
 
   const calculateAverageDailySales = (
     startDate: Date,
