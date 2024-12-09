@@ -448,9 +448,6 @@ export default function Dashboard() {
                   bg={
                     week.daysOfStock <= params.safetyStockDays
                       ? "red.100"
-                      : week.daysOfStock >=
-                        params.maxStockDays / week.forecastedDailySales
-                      ? "yellow.100"
                       : undefined
                   }>
                   {Math.round(week.daysOfStock)}
