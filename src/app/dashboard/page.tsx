@@ -76,34 +76,63 @@ export default function Dashboard() {
   const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
 
   useEffect(() => {
-    const updatedForecasts: WeeklyForecast[] = weeklyForecasts.reduce<
-      WeeklyForecast[]
-    >((acc, week, index) => {
-      if (index === 0) {
-        acc.push({
-          ...week,
-          amazonInventory: params.currentFBAStock,
-          daysOfStock: params.currentFBAStock / week.forecastedDailySales,
-        });
-      } else {
-        const previousWeek = acc[index - 1];
-        const newInventory: number =
-          previousWeek.amazonInventory +
-          week.incomingShipments -
-          previousWeek.forecastedDailySales * 7;
+    // First, reset all incoming shipments to 0
+    const updatedForecasts = weeklyForecasts.map((week) => ({
+      ...week,
+      incomingShipments: 0,
+    }));
 
-        acc.push({
-          ...week,
-          amazonInventory: newInventory,
-          daysOfStock: newInventory / week.forecastedDailySales,
-        });
+    // Add incoming shipments based on order shipments
+    orderShipments.forEach((shipment) => {
+      const shipmentArrivalDate = addDays(
+        shipment.shipDate,
+        params.shippingLeadTime
+      );
+      const weekIndex = updatedForecasts.findIndex((week) => {
+        const weekEnd = addDays(week.date, 6);
+        return (
+          shipmentArrivalDate >= week.date && shipmentArrivalDate <= weekEnd
+        );
+      });
+
+      if (weekIndex !== -1) {
+        updatedForecasts[weekIndex] = {
+          ...updatedForecasts[weekIndex],
+          incomingShipments: shipment.shipQuantity,
+        };
       }
-      return acc;
-    }, []);
+    });
+
+    // Calculate inventory levels and days of stock
+    const finalForecasts = updatedForecasts.reduce<WeeklyForecast[]>(
+      (acc, week, index) => {
+        if (index === 0) {
+          acc.push({
+            ...week,
+            amazonInventory: params.currentFBAStock,
+            daysOfStock: params.currentFBAStock / week.forecastedDailySales,
+          });
+        } else {
+          const previousWeek = acc[index - 1];
+          const newInventory: number =
+            previousWeek.amazonInventory +
+            week.incomingShipments -
+            previousWeek.forecastedDailySales * 7;
+
+          acc.push({
+            ...week,
+            amazonInventory: newInventory,
+            daysOfStock: newInventory / week.forecastedDailySales,
+          });
+        }
+        return acc;
+      },
+      []
+    );
 
     // Only update if the values have actually changed
-    if (JSON.stringify(updatedForecasts) !== JSON.stringify(weeklyForecasts)) {
-      setWeeklyForecasts(updatedForecasts);
+    if (JSON.stringify(finalForecasts) !== JSON.stringify(weeklyForecasts)) {
+      setWeeklyForecasts(finalForecasts);
     }
 
     // Calculate order shipments
@@ -149,7 +178,6 @@ export default function Dashboard() {
     params.maxStockDays,
     params.currentFBAStock,
     weeklyForecasts.map((f) => f.forecastedDailySales).join(","),
-    weeklyForecasts.map((f) => f.incomingShipments).join(","),
   ]);
 
   const calculateAverageDailySales = (
@@ -395,19 +423,8 @@ export default function Dashboard() {
                 <Td fontSize="md" fontWeight="medium">
                   {format(week.date, "MM/dd/yyyy")}
                 </Td>
-                <Td>
-                  <Input
-                    type="number"
-                    size="md"
-                    fontSize="md"
-                    fontWeight="medium"
-                    value={
-                      week.incomingShipments === 0
-                        ? ""
-                        : week.incomingShipments.toString()
-                    }
-                    onChange={handleForecastChange(index, "incomingShipments")}
-                  />
+                <Td fontSize="md" fontWeight="medium">
+                  {week.incomingShipments === 0 ? "-" : week.incomingShipments}
                 </Td>
                 <Td fontSize="md" fontWeight="medium">
                   {Math.round(week.amazonInventory)}
