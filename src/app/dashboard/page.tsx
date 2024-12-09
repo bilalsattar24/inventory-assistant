@@ -50,7 +50,7 @@ interface OrderShipment {
 }
 
 export default function Dashboard() {
-  const [showParams, setShowParams] = useState(false);
+  const [showParams, setShowParams] = useState(true);
   const [params, setParams] = useState<InventoryParams>({
     safetyStockDays: 45,
     productionLeadTime: 30,
