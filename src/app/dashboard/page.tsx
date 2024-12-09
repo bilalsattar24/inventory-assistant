@@ -63,7 +63,7 @@ export default function Dashboard() {
     () => {
       // Initialize 12 weeks of forecasts
       const startDate = startOfWeek(new Date());
-      return Array.from({ length: 12 }, (_, i) => ({
+      return Array.from({ length: 24 }, (_, i) => ({
         date: addDays(startDate, i * 7),
         incomingShipments: 0,
         amazonInventory: i === 0 ? params.currentFBAStock : 0,
@@ -142,20 +142,27 @@ export default function Dashboard() {
       today,
       addDays(today, totalLeadTime)
     );
-    const DUR = Math.floor(
+
+    // Find when we'll hit safety stock
+    let daysUntilSafetyStock = Math.floor(
       (params.currentFBAStock - params.safetyStockDays * avgDailySales) /
         avgDailySales
     );
 
-    const orderDate = addDays(today, DUR);
-    const shipDate = addDays(orderDate, params.productionLeadTime);
-    const arrivalDate = addDays(shipDate, params.shippingLeadTime);
-    const projectedInventory = calculateProjectedInventory(arrivalDate);
+    // Calculate dates working backwards from when we need inventory to arrive
+    const requiredArrivalDate = addDays(today, daysUntilSafetyStock);
+    const shipDate = addDays(requiredArrivalDate, -params.shippingLeadTime);
+    const orderDate = addDays(shipDate, -params.productionLeadTime);
+
+    const projectedInventory = calculateProjectedInventory(requiredArrivalDate);
     const projectedDaysOfStock = projectedInventory / avgDailySales;
     const orderQuantity = Math.ceil(
       (params.maxStockDays - projectedDaysOfStock) * avgDailySales
     );
-    const minInventory = calculateMinInventoryBeforeArrival(today, arrivalDate);
+    const minInventory = calculateMinInventoryBeforeArrival(
+      today,
+      requiredArrivalDate
+    );
 
     const newOrderShipment: OrderShipment = {
       orderDate,
