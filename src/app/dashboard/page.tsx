@@ -6,21 +6,21 @@ import { InventoryParameters } from "./components/InventoryParameters";
 import { ForecastTable } from "./components/ForecastTable";
 import { OrderShipments } from "./components/OrderShipments";
 import { InventoryParams, WeeklyForecast, OrderShipment } from "./types";
-import { useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { fetchProducts } from '@/lib/products';
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProducts } from "@/lib/products";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
-  const productId = searchParams.get('productId');
+  const productId = searchParams.get("productId");
   const [showParams, setShowParams] = useState(true);
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: fetchProducts
+    queryKey: ["products"],
+    queryFn: fetchProducts,
   });
 
-  const product = products?.find(p => p.id === Number(productId));
+  const product = products?.find((p) => p.id === Number(productId));
 
   const [params, setParams] = useState<InventoryParams>({
     safetyStockDays: 45,
@@ -67,7 +67,10 @@ export default function Dashboard() {
   const handleForecastChange =
     (
       index: number,
-      field: keyof Pick<WeeklyForecast, "incomingShipments" | "forecastedDailySales">
+      field: keyof Pick<
+        WeeklyForecast,
+        "incomingShipments" | "forecastedDailySales"
+      >
     ) =>
     (e: ChangeEvent<HTMLInputElement>) => {
       const newValue = Number(e.target.value);
@@ -99,7 +102,10 @@ export default function Dashboard() {
     );
   };
 
-  const calculateAverageDailySales = (startDate: Date, endDate: Date): number => {
+  const calculateAverageDailySales = (
+    startDate: Date,
+    endDate: Date
+  ): number => {
     const days = differenceInDays(endDate, startDate);
     let totalSales = 0;
     let daysCount = 0;
@@ -257,10 +263,11 @@ export default function Dashboard() {
     );
 
     // Only update if there's a meaningful change
-    const hasChanged = JSON.stringify(finalForecasts) !== JSON.stringify(weeklyForecasts);
+    const hasChanged =
+      JSON.stringify(finalForecasts) !== JSON.stringify(weeklyForecasts);
     const hasValidValues = finalForecasts.every(
-      (forecast) => 
-        !isNaN(forecast.amazonInventory) && 
+      (forecast) =>
+        !isNaN(forecast.amazonInventory) &&
         !isNaN(forecast.daysOfStock) &&
         isFinite(forecast.amazonInventory) &&
         isFinite(forecast.daysOfStock)
@@ -279,7 +286,7 @@ export default function Dashboard() {
         </Heading>
       )}
       <Heading mb={6}>Inventory Dashboard</Heading>
-      
+
       <InventoryParameters
         params={params}
         showParams={showParams}
@@ -287,14 +294,13 @@ export default function Dashboard() {
         onToggleParams={() => setShowParams(!showParams)}
         isLoading={isLoading}
       />
+      <OrderShipments shipments={orderShipments} />
 
       <ForecastTable
         forecasts={weeklyForecasts}
         onForecastChange={handleForecastChange}
         onFillDown={handleFillDown}
       />
-
-      <OrderShipments shipments={orderShipments} />
     </Container>
   );
 }
