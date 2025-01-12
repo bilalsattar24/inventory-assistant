@@ -46,9 +46,10 @@ export default function Dashboard() {
 
   const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(
     () => {
-      const startDate = startOfWeek(new Date());
+      const today = new Date();
+      const mondayOfThisWeek = startOfWeek(today, { weekStartsOn: 1 }); // 1 represents Monday
       return Array.from({ length: 24 }, (_, i) => ({
-        date: addDays(startDate, i * 7),
+        date: addDays(mondayOfThisWeek, i * 7),
         incomingShipments: 0,
         amazonInventory: i === 0 ? params.currentFBAStock : 0,
         forecastedDailySales: 10,
