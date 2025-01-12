@@ -56,7 +56,7 @@ export default function Dashboard() {
   const calculateForecasts = () => {
     const today = new Date();
     const mondayOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
-    
+
     // Initialize base forecasts
     const forecasts = Array.from({ length: 24 }, (_, i) => ({
       date: addDays(mondayOfThisWeek, i * 7),
@@ -69,12 +69,12 @@ export default function Dashboard() {
     // Add order quantities to the appropriate weeks if orders exist
     if (orders) {
       console.log("Processing orders:", orders);
-      orders.forEach(order => {
+      orders.forEach((order) => {
         const deliveryDate = new Date(order.expected_arrival_date);
         const weekStart = startOfWeek(deliveryDate, { weekStartsOn: 1 });
-        
+
         // Find the week index by comparing dates
-        const weekIndex = forecasts.findIndex(forecast => {
+        const weekIndex = forecasts.findIndex((forecast) => {
           const forecastDate = new Date(forecast.date);
           return (
             forecastDate.getFullYear() === weekStart.getFullYear() &&
@@ -82,15 +82,15 @@ export default function Dashboard() {
             forecastDate.getDate() === weekStart.getDate()
           );
         });
-        
+
         console.log("Order processing:", {
           order,
           deliveryDate,
           weekStart,
           mondayOfThisWeek,
-          weekIndex
+          weekIndex,
         });
-        
+
         // Only add if the week is within our forecast range
         if (weekIndex >= 0 && weekIndex < forecasts.length) {
           forecasts[weekIndex].incomingShipments += order.units;
@@ -105,15 +105,16 @@ export default function Dashboard() {
       // Add incoming shipments to inventory
       runningInventory += week.incomingShipments;
       week.amazonInventory = runningInventory;
-      
+
       // Subtract weekly sales from inventory
       const weeklySales = week.forecastedDailySales * 7;
       runningInventory = Math.max(0, runningInventory - weeklySales);
-      
+
       // Calculate days of stock based on daily sales rate
-      week.daysOfStock = week.forecastedDailySales > 0 
-        ? Math.round(week.amazonInventory / week.forecastedDailySales)
-        : 0;
+      week.daysOfStock =
+        week.forecastedDailySales > 0
+          ? Math.round(week.amazonInventory / week.forecastedDailySales)
+          : 0;
     });
 
     console.log("Final forecasts:", forecasts);
@@ -121,7 +122,9 @@ export default function Dashboard() {
   };
 
   // Update weekly forecasts whenever params or orders change
-  const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(() => calculateForecasts());
+  const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(() =>
+    calculateForecasts()
+  );
 
   useEffect(() => {
     setWeeklyForecasts(calculateForecasts());
