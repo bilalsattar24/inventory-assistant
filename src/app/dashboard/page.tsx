@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { Container, Heading } from "@chakra-ui/react";
+import { Container, Heading, Button, HStack } from "@chakra-ui/react";
 import { addDays, startOfWeek, differenceInDays } from "date-fns";
 import { InventoryParameters } from "./components/InventoryParameters";
 import { ForecastTable } from "./components/ForecastTable";
@@ -9,6 +9,7 @@ import { InventoryParams, WeeklyForecast, OrderShipment } from "./types";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/lib/products";
+import Link from "next/link";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -280,11 +281,18 @@ export default function Dashboard() {
 
   return (
     <Container maxW="container.xl" py={8}>
-      {product && (
-        <Heading size="lg" mb={6}>
-          {product.name}
-        </Heading>
-      )}
+      <HStack mb={6} justify="space-between" align="center">
+        <Link href="/products">
+          <Button colorScheme="gray" size="sm">
+            Back to Products
+          </Button>
+        </Link>
+        {product && (
+          <Heading size="lg">
+            {product.name}
+          </Heading>
+        )}
+      </HStack>
       <Heading mb={6}>Inventory Dashboard</Heading>
 
       <InventoryParameters
