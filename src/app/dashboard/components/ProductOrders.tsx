@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { revalidatePath } from "next/cache";
 
 interface ProductOrdersProps {
   orders: Order[];
@@ -57,6 +58,7 @@ export default function ProductOrders({
           expected_arrival_date: expectedDate,
           product_id: productId,
         });
+        queryClient.refetchQueries();
         toast({ title: "Order created successfully", status: "success" });
       }
       queryClient.invalidateQueries({ queryKey: ["orders", productId] });
@@ -72,7 +74,7 @@ export default function ProductOrders({
   const handleDelete = async (orderId: number) => {
     try {
       await deleteOrder(orderId);
-      queryClient.invalidateQueries({ queryKey: ["orders", productId] });
+      queryClient.refetchQueries();
       toast({ title: "Order deleted successfully", status: "success" });
     } catch (error) {
       toast({ title: "Error deleting order", status: "error" });
