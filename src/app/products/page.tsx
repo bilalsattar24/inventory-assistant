@@ -12,7 +12,11 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/lib/products";
-import { EyeIcon, TrashIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import {
+  EyeIcon,
+  TrashIcon,
+  ArrowRightIcon,
+} from "@heroicons/react/24/outline";
 
 function AddProductButton({ onClick }: { onClick: () => void }) {
   return (
@@ -452,11 +456,15 @@ export default function ProductPage() {
                   <div className="flex items-center space-x-3">
                     <EditableCell
                       value={product.name}
-                      onSave={(value) => handleUpdate(product.id, "name", value)}
+                      onSave={(value) =>
+                        handleUpdate(product.id, "name", value)
+                      }
                       type="text"
                     />
                     <button
-                      onClick={() => router.push(`/dashboard?productId=${product.id}`)}
+                      onClick={() =>
+                        router.push(`/dashboard?productId=${product.id}`)
+                      }
                       className="group relative p-1.5 rounded-full hover:bg-blue-50 transition-colors flex items-center space-x-1"
                       title="View Details"
                     >
