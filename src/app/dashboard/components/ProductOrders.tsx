@@ -1,7 +1,20 @@
 "use client";
 
 import { Order, createOrder, updateOrder, deleteOrder } from "@/lib/orders";
-import { Button, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, FormControl, FormLabel, Input, useDisclosure } from "@chakra-ui/react";
+import {
+  Button,
+  useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  FormControl,
+  FormLabel,
+  Input,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -20,7 +33,7 @@ export default function ProductOrders({
   const [expectedDate, setExpectedDate] = useState("");
   const toast = useToast();
   const queryClient = useQueryClient();
-  
+
   // Get product_id from the first order since all orders are for the same product
   const productId = orders[0]?.product_id;
 
@@ -46,7 +59,7 @@ export default function ProductOrders({
         });
         toast({ title: "Order created successfully", status: "success" });
       }
-      queryClient.invalidateQueries({ queryKey: ['orders', productId] });
+      queryClient.invalidateQueries({ queryKey: ["orders", productId] });
       onClose();
       setSelectedOrder(null);
       setUnits("");
@@ -59,7 +72,7 @@ export default function ProductOrders({
   const handleDelete = async (orderId: number) => {
     try {
       await deleteOrder(orderId);
-      queryClient.invalidateQueries({ queryKey: ['orders', productId] });
+      queryClient.invalidateQueries({ queryKey: ["orders", productId] });
       toast({ title: "Order deleted successfully", status: "success" });
     } catch (error) {
       toast({ title: "Error deleting order", status: "error" });
@@ -103,7 +116,11 @@ export default function ProductOrders({
                   <Button size="xs" onClick={() => openEditModal(order)}>
                     Edit
                   </Button>
-                  <Button size="xs" colorScheme="red" onClick={() => handleDelete(order.id)}>
+                  <Button
+                    size="xs"
+                    colorScheme="red"
+                    onClick={() => handleDelete(order.id)}
+                  >
                     Delete
                   </Button>
                 </div>
