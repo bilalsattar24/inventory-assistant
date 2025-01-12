@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormHelperText,
 } from "@chakra-ui/react";
-import { SettingsIcon } from "@chakra-ui/icons";
+import { SettingsIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { addDays, startOfWeek, format, differenceInDays } from "date-fns";
 
 interface InventoryParams {
@@ -275,6 +275,49 @@ export default function Dashboard() {
       );
     };
 
+  const handleFillDown = (index: number) => {
+    const valueToFill = weeklyForecasts[index].forecastedDailySales;
+    setWeeklyForecasts((prevForecasts) =>
+      prevForecasts.map((week, i) => {
+        if (i >= index) {
+          return {
+            ...week,
+            forecastedDailySales: valueToFill,
+          };
+        }
+        return week;
+      })
+    );
+  };
+
+  const handleBulkEdit = (startIndex: number, endIndex: number, value: number) => {
+    setWeeklyForecasts((prevForecasts) =>
+      prevForecasts.map((week, i) => {
+        if (i >= startIndex && i <= endIndex) {
+          return {
+            ...week,
+            forecastedDailySales: value,
+          };
+        }
+        return week;
+      })
+    );
+  };
+
+  const handlePercentageChange = (startIndex: number, endIndex: number, percentage: number) => {
+    setWeeklyForecasts((prevForecasts) =>
+      prevForecasts.map((week, i) => {
+        if (i >= startIndex && i <= endIndex) {
+          return {
+            ...week,
+            forecastedDailySales: week.forecastedDailySales * (1 + percentage / 100),
+          };
+        }
+        return week;
+      })
+    );
+  };
+
   return (
     <Container maxW="container.xl" py={4}>
       {/* Parameters Section */}
@@ -428,9 +471,9 @@ export default function Dashboard() {
           </Thead>
           <Tbody>
             {weeklyForecasts.map((week, index) => (
-              <Tr key={index}>
+              <Tr key={week.date.toISOString()}>
                 <Td fontSize="md" fontWeight="medium">
-                  {format(week.date, "MM/dd/yyyy")}
+                  {format(week.date, "MMM d, yyyy")}
                 </Td>
                 <Td fontSize="md" fontWeight="medium">
                   {week.incomingShipments === 0 ? "-" : week.incomingShipments}
@@ -439,17 +482,25 @@ export default function Dashboard() {
                   {Math.round(week.amazonInventory)}
                 </Td>
                 <Td>
-                  <Input
-                    type="number"
-                    size="md"
-                    fontSize="md"
-                    fontWeight="medium"
-                    value={week.forecastedDailySales.toString()}
-                    onChange={handleForecastChange(
-                      index,
-                      "forecastedDailySales"
-                    )}
-                  />
+                  <Stack direction="row" spacing={2} align="center">
+                    <Input
+                      type="number"
+                      value={week.forecastedDailySales}
+                      onChange={handleForecastChange(
+                        index,
+                        "forecastedDailySales"
+                      )}
+                      size="sm"
+                      width="100px"
+                    />
+                    <IconButton
+                      aria-label="Fill down"
+                      icon={<ChevronDownIcon />}
+                      size="sm"
+                      onClick={() => handleFillDown(index)}
+                      title="Copy this value to all rows below"
+                    />
+                  </Stack>
                 </Td>
                 <Td
                   fontSize="md"
