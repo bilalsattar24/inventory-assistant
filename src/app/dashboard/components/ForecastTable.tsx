@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   Thead,
@@ -9,25 +9,34 @@ import {
   Stack,
   Input,
   IconButton,
-} from '@chakra-ui/react';
-import { ChevronDownIcon } from '@chakra-ui/icons';
-import { format } from 'date-fns';
-import { WeeklyForecast } from '../types';
+} from "@chakra-ui/react";
+import { ChevronDownIcon } from "@chakra-ui/icons";
+import { format } from "date-fns";
+import { WeeklyForecast } from "../types";
 
 interface ForecastTableProps {
   forecasts: WeeklyForecast[];
   onForecastChange: (
     index: number,
-    field: keyof Pick<WeeklyForecast, "incomingShipments" | "forecastedDailySales">
+    field: keyof Pick<
+      WeeklyForecast,
+      "incomingShipments" | "forecastedDailySales"
+    >
   ) => (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFillDown: (index: number) => void;
 }
 
-export function ForecastTable({ 
-  forecasts, 
-  onForecastChange, 
-  onFillDown 
+export function ForecastTable({
+  forecasts,
+  onForecastChange,
+  onFillDown,
 }: ForecastTableProps) {
+  console.log(
+    "Rendering ForecastTable with",
+    forecasts.length,
+    "weeks",
+    forecasts
+  );
   return (
     <Table variant="simple">
       <Thead>

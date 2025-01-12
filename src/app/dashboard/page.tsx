@@ -287,7 +287,8 @@ export default function Dashboard() {
   useEffect(() => {
     const updatedForecasts = weeklyForecasts.map((week) => ({
       ...week,
-      incomingShipments: 0,
+      // Preserve existing incomingShipments instead of resetting to 0
+      incomingShipments: week.incomingShipments,
     }));
 
     orderShipments.forEach((shipment) => {
@@ -305,7 +306,9 @@ export default function Dashboard() {
       if (weekIndex !== -1) {
         updatedForecasts[weekIndex] = {
           ...updatedForecasts[weekIndex],
-          incomingShipments: shipment.shipQuantity,
+          incomingShipments:
+            updatedForecasts[weekIndex].incomingShipments +
+            shipment.shipQuantity,
         };
       }
     });
