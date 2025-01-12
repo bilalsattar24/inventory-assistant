@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { EditableCell } from "@/components/EditableCell";
 import {
   Product,
@@ -11,6 +12,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/lib/products";
+import { EyeIcon, TrashIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 
 function AddProductButton({ onClick }: { onClick: () => void }) {
   return (
@@ -231,6 +233,7 @@ function ProductForm({
 }
 
 export default function ProductPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newProduct, setNewProduct] = useState<NewProduct>({
@@ -446,11 +449,22 @@ export default function ProductPage() {
             {products?.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4">
-                  <EditableCell
-                    value={product.name}
-                    onSave={(value) => handleUpdate(product.id, "name", value)}
-                    type="text"
-                  />
+                  <div className="flex items-center space-x-3">
+                    <EditableCell
+                      value={product.name}
+                      onSave={(value) => handleUpdate(product.id, "name", value)}
+                      type="text"
+                    />
+                    <button
+                      onClick={() => router.push(`/dashboard?productId=${product.id}`)}
+                      className="group relative p-1.5 rounded-full hover:bg-blue-50 transition-colors flex items-center space-x-1"
+                      title="View Details"
+                    >
+                      <EyeIcon className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
+                      <ArrowRightIcon className="w-3 h-3 text-blue-600 group-hover:text-blue-700" />
+                      <span className="sr-only">View Details</span>
+                    </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(product.created_at).toLocaleDateString()}
@@ -507,9 +521,11 @@ export default function ProductPage() {
                 <td className="px-6 py-4">
                   <button
                     onClick={() => handleDelete(product.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="group relative p-1.5 rounded-full hover:bg-red-50 transition-colors"
+                    title="Delete Product"
                   >
-                    Delete
+                    <TrashIcon className="w-5 h-5 text-red-600 group-hover:text-red-700" />
+                    <span className="sr-only">Delete Product</span>
                   </button>
                 </td>
               </tr>
