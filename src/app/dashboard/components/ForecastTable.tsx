@@ -42,7 +42,7 @@ export function ForecastTable({
       <Tbody>
         {forecasts.map((week, index) => (
           <Tr key={week.date.toISOString()}>
-            <Td>{format(week.date, "MMM d, yyyy")}</Td>
+            <Td>{format(new Date(week.date), "MMM d, yyyy")}</Td>
             <Td fontSize="md" fontWeight="medium">
               {week.incomingShipments === 0 ? "-" : week.incomingShipments}
             </Td>

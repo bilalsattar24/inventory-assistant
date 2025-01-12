@@ -4,9 +4,8 @@ export interface Order {
   id: number;
   created_at: string;
   product_id: number;
-  quantity: number;
-  status: string;
-  expected_delivery_date: string;
+  units: number;
+  expected_arrival_date: string;
 }
 
 export type NewOrder = Omit<Order, "id" | "created_at">;

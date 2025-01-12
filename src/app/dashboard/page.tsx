@@ -36,7 +36,7 @@ export default function Dashboard() {
     productionLeadTime: 30,
     shippingLeadTime: 50,
     maxStockDays: 100,
-    currentFBAStock: 1200,
+    currentFBAStock: 0, // Start with 0 as we'll update this when product loads
   });
 
   // Update params when product data is loaded
@@ -52,19 +52,80 @@ export default function Dashboard() {
     }
   }, [product]);
 
-  const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(
-    () => {
-      const today = new Date();
-      const mondayOfThisWeek = startOfWeek(today, { weekStartsOn: 1 }); // 1 represents Monday
-      return Array.from({ length: 24 }, (_, i) => ({
-        date: addDays(mondayOfThisWeek, i * 7),
-        incomingShipments: 0,
-        amazonInventory: i === 0 ? params.currentFBAStock : 0,
-        forecastedDailySales: 10,
-        daysOfStock: 0,
-      }));
+  // Calculate weekly forecasts
+  const calculateForecasts = () => {
+    const today = new Date();
+    const mondayOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
+    
+    // Initialize base forecasts
+    const forecasts = Array.from({ length: 24 }, (_, i) => ({
+      date: addDays(mondayOfThisWeek, i * 7),
+      incomingShipments: 0,
+      amazonInventory: i === 0 ? params.currentFBAStock : 0,
+      forecastedDailySales: 10,
+      daysOfStock: 0,
+    }));
+
+    // Add order quantities to the appropriate weeks if orders exist
+    if (orders) {
+      console.log("Processing orders:", orders);
+      orders.forEach(order => {
+        const deliveryDate = new Date(order.expected_arrival_date);
+        const weekStart = startOfWeek(deliveryDate, { weekStartsOn: 1 });
+        
+        // Find the week index by comparing dates
+        const weekIndex = forecasts.findIndex(forecast => {
+          const forecastDate = new Date(forecast.date);
+          return (
+            forecastDate.getFullYear() === weekStart.getFullYear() &&
+            forecastDate.getMonth() === weekStart.getMonth() &&
+            forecastDate.getDate() === weekStart.getDate()
+          );
+        });
+        
+        console.log("Order processing:", {
+          order,
+          deliveryDate,
+          weekStart,
+          mondayOfThisWeek,
+          weekIndex
+        });
+        
+        // Only add if the week is within our forecast range
+        if (weekIndex >= 0 && weekIndex < forecasts.length) {
+          forecasts[weekIndex].incomingShipments += order.units;
+          console.log(`Added ${order.units} units to week ${weekIndex}`);
+        }
+      });
     }
-  );
+
+    // Calculate running inventory and days of stock
+    let runningInventory = params.currentFBAStock;
+    forecasts.forEach((week, index) => {
+      // Add incoming shipments to inventory
+      runningInventory += week.incomingShipments;
+      week.amazonInventory = runningInventory;
+      
+      // Subtract weekly sales from inventory
+      const weeklySales = week.forecastedDailySales * 7;
+      runningInventory = Math.max(0, runningInventory - weeklySales);
+      
+      // Calculate days of stock based on daily sales rate
+      week.daysOfStock = week.forecastedDailySales > 0 
+        ? Math.round(week.amazonInventory / week.forecastedDailySales)
+        : 0;
+    });
+
+    console.log("Final forecasts:", forecasts);
+    return forecasts;
+  };
+
+  // Update weekly forecasts whenever params or orders change
+  const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(() => calculateForecasts());
+
+  useEffect(() => {
+    setWeeklyForecasts(calculateForecasts());
+  }, [params, orders]); // Recalculate when params or orders change
 
   const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
 
