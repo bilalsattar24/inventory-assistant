@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/lib/products";
 import Link from "next/link";
+import ProductOrders from "./components/ProductOrders";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -241,9 +242,10 @@ export default function Dashboard() {
     const finalForecasts = updatedForecasts.reduce<WeeklyForecast[]>(
       (acc, week, index) => {
         if (index === 0) {
-          const daysOfStock = week.forecastedDailySales > 0 
-            ? params.currentFBAStock / week.forecastedDailySales 
-            : 0;
+          const daysOfStock =
+            week.forecastedDailySales > 0
+              ? params.currentFBAStock / week.forecastedDailySales
+              : 0;
           acc.push({
             ...week,
             amazonInventory: params.currentFBAStock,
@@ -256,9 +258,10 @@ export default function Dashboard() {
             previousWeek.forecastedDailySales * 7 +
             week.incomingShipments;
 
-          const daysOfStock = week.forecastedDailySales > 0 
-            ? newInventory / week.forecastedDailySales 
-            : 0;
+          const daysOfStock =
+            week.forecastedDailySales > 0
+              ? newInventory / week.forecastedDailySales
+              : 0;
 
           acc.push({
             ...week,
@@ -285,7 +288,12 @@ export default function Dashboard() {
     if (hasChanged && hasValidValues) {
       setWeeklyForecasts(finalForecasts);
     }
-  }, [orderShipments, params.shippingLeadTime, params.currentFBAStock, weeklyForecasts]);
+  }, [
+    orderShipments,
+    params.shippingLeadTime,
+    params.currentFBAStock,
+    weeklyForecasts,
+  ]);
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -306,6 +314,7 @@ export default function Dashboard() {
         onToggleParams={() => setShowParams(!showParams)}
         isLoading={isLoading}
       />
+      <ProductOrders productId={product?.id} />
       <OrderShipments shipments={orderShipments} />
 
       <ForecastTable
