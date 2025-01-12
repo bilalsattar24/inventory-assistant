@@ -272,11 +272,11 @@ export default function ProductPage() {
     setIsAddingNew(false);
     setNewProduct({
       name: "",
-      safety_stock_days: 0,
-      production_lead_time_days: 0,
-      shipping_lead_time: 0,
-      max_stock_days: 0,
-      current_stock_units: 0,
+      safety_stock_days: 45,
+      production_lead_time_days: 30,
+      shipping_lead_time: 50,
+      max_stock_days: 100,
+      current_stock_units: 1200,
     });
     queryClient.invalidateQueries({ queryKey: ["products"] });
   };
