@@ -6,9 +6,22 @@ import { InventoryParameters } from "./components/InventoryParameters";
 import { ForecastTable } from "./components/ForecastTable";
 import { OrderShipments } from "./components/OrderShipments";
 import { InventoryParams, WeeklyForecast, OrderShipment } from "./types";
+import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProducts } from '@/lib/products';
 
 export default function Dashboard() {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get('productId');
   const [showParams, setShowParams] = useState(true);
+
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts
+  });
+
+  const product = products?.find(p => p.id === Number(productId));
+
   const [params, setParams] = useState<InventoryParams>({
     safetyStockDays: 45,
     productionLeadTime: 30,
@@ -16,6 +29,19 @@ export default function Dashboard() {
     maxStockDays: 100,
     currentFBAStock: 1200,
   });
+
+  // Update params when product data is loaded
+  useEffect(() => {
+    if (product) {
+      setParams({
+        safetyStockDays: product.safety_stock_days,
+        productionLeadTime: product.production_lead_time_days,
+        shippingLeadTime: product.shipping_lead_time,
+        maxStockDays: product.max_stock_days,
+        currentFBAStock: product.current_stock_units,
+      });
+    }
+  }, [product]);
 
   const [weeklyForecasts, setWeeklyForecasts] = useState<WeeklyForecast[]>(
     () => {
@@ -246,16 +272,15 @@ export default function Dashboard() {
   }, [orderShipments, params.shippingLeadTime, params.currentFBAStock]);
 
   return (
-    <Container maxW="container.xl" py={4}>
-      <Heading as="h1" size="lg" mb={6}>
-        Inventory Dashboard
-      </Heading>
+    <Container maxW="container.xl" py={8}>
+      <Heading mb={6}>Inventory Dashboard</Heading>
       
       <InventoryParameters
         params={params}
         showParams={showParams}
         onParamChange={handleParamChange}
         onToggleParams={() => setShowParams(!showParams)}
+        isLoading={isLoading}
       />
 
       <ForecastTable
