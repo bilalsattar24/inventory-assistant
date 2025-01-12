@@ -241,10 +241,13 @@ export default function Dashboard() {
     const finalForecasts = updatedForecasts.reduce<WeeklyForecast[]>(
       (acc, week, index) => {
         if (index === 0) {
+          const daysOfStock = week.forecastedDailySales > 0 
+            ? params.currentFBAStock / week.forecastedDailySales 
+            : 0;
           acc.push({
             ...week,
             amazonInventory: params.currentFBAStock,
-            daysOfStock: params.currentFBAStock / week.forecastedDailySales,
+            daysOfStock,
           });
         } else {
           const previousWeek = acc[index - 1];
@@ -253,10 +256,14 @@ export default function Dashboard() {
             previousWeek.forecastedDailySales * 7 +
             week.incomingShipments;
 
+          const daysOfStock = week.forecastedDailySales > 0 
+            ? newInventory / week.forecastedDailySales 
+            : 0;
+
           acc.push({
             ...week,
             amazonInventory: newInventory,
-            daysOfStock: newInventory / week.forecastedDailySales,
+            daysOfStock,
           });
         }
         return acc;
@@ -278,7 +285,7 @@ export default function Dashboard() {
     if (hasChanged && hasValidValues) {
       setWeeklyForecasts(finalForecasts);
     }
-  }, [orderShipments, params.shippingLeadTime, params.currentFBAStock]);
+  }, [orderShipments, params.shippingLeadTime, params.currentFBAStock, weeklyForecasts]);
 
   return (
     <Container maxW="container.xl" py={8}>
