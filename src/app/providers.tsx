@@ -1,6 +1,7 @@
 'use client'
 
 import { ChakraProvider, extendTheme } from '@chakra-ui/react'
+import QueryProvider from '@/providers/QueryProvider';
 
 const theme = extendTheme({
   colors: {
@@ -37,8 +38,10 @@ const theme = extendTheme({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-      <ChakraProvider theme={theme}>
+    <ChakraProvider theme={theme}>
+      <QueryProvider>
         {children}
-      </ChakraProvider>
+      </QueryProvider>
+    </ChakraProvider>
   )
 }
