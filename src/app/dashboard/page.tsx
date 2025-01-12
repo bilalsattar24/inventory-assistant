@@ -273,6 +273,11 @@ export default function Dashboard() {
 
   return (
     <Container maxW="container.xl" py={8}>
+      {product && (
+        <Heading size="lg" mb={6}>
+          {product.name}
+        </Heading>
+      )}
       <Heading mb={6}>Inventory Dashboard</Heading>
       
       <InventoryParameters
