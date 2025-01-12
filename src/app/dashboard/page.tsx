@@ -389,7 +389,10 @@ export default function Dashboard() {
         isLoading={productsLoading}
       />
       {productId && (
-        <ProductOrders orders={orders || []} isLoading={ordersLoading} />
+        <ProductOrders
+          orders={orders || []}
+          isLoading={ordersLoading}
+        />
       )}
       <OrderShipments shipments={orderShipments} />
 
