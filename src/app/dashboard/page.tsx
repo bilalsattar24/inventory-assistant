@@ -14,7 +14,7 @@ import Link from "next/link";
 export default function Dashboard() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
-  const [showParams, setShowParams] = useState(true);
+  const [showParams, setShowParams] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
