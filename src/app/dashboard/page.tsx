@@ -287,11 +287,7 @@ export default function Dashboard() {
             Back to Products
           </Button>
         </Link>
-        {product && (
-          <Heading size="lg">
-            {product.name}
-          </Heading>
-        )}
+        {product && <Heading size="lg">{product.name}</Heading>}
       </HStack>
       <Heading mb={6}>Inventory Dashboard</Heading>
 
