@@ -1,29 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Order, fetchOrders } from '@/lib/orders';
+import { Order } from '@/lib/orders';
 
 interface ProductOrdersProps {
-  productId: number;
+  orders: Order[];
+  isLoading: boolean;
 }
 
-export default function ProductOrders({ productId }: ProductOrdersProps) {
-  const [orders, setOrders] = useState<Order[]>([]);
-
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        const data = await fetchOrders(productId);
-        setOrders(data);
-      } catch (error) {
-        console.error('Error loading orders:', error);
-      }
-    };
-
-    if (productId) {
-      loadOrders();
-    }
-  }, [productId]);
+export default function ProductOrders({ orders, isLoading }: ProductOrdersProps) {
+  if (isLoading) {
+    return <div className="animate-pulse h-24 bg-gray-100 rounded-lg" />;
+  }
 
   if (orders.length === 0) {
     return null;

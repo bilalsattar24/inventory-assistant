@@ -9,6 +9,7 @@ import { InventoryParams, WeeklyForecast, OrderShipment } from "./types";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/lib/products";
+import { fetchOrders } from "@/lib/orders";
 import Link from "next/link";
 import ProductOrders from "./components/ProductOrders";
 
@@ -17,9 +18,15 @@ export default function Dashboard() {
   const productId = searchParams.get("productId");
   const [showParams, setShowParams] = useState(false);
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
     queryFn: fetchProducts,
+  });
+
+  const { data: orders, isLoading: ordersLoading } = useQuery({
+    queryKey: ["orders", productId],
+    queryFn: () => fetchOrders(Number(productId)),
+    enabled: !!productId,
   });
 
   const product = products?.find((p) => p.id === Number(productId));
@@ -312,9 +319,11 @@ export default function Dashboard() {
         showParams={showParams}
         onParamChange={handleParamChange}
         onToggleParams={() => setShowParams(!showParams)}
-        isLoading={isLoading}
+        isLoading={productsLoading}
       />
-      <ProductOrders productId={product?.id} />
+      {productId && (
+        <ProductOrders orders={orders || []} isLoading={ordersLoading} />
+      )}
       <OrderShipments shipments={orderShipments} />
 
       <ForecastTable
