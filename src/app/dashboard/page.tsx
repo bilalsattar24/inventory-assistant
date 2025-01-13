@@ -68,7 +68,6 @@ export default function Dashboard() {
 
     // Add order quantities to the appropriate weeks if orders exist
     if (orders) {
-      console.log("Processing orders:", orders);
       orders.forEach((order) => {
         const deliveryDate = new Date(order.expected_arrival_date);
         const weekStart = startOfWeek(deliveryDate, { weekStartsOn: 1 });
@@ -83,18 +82,9 @@ export default function Dashboard() {
           );
         });
 
-        console.log("Order processing:", {
-          order,
-          deliveryDate,
-          weekStart,
-          mondayOfThisWeek,
-          weekIndex,
-        });
-
         // Only add if the week is within our forecast range
         if (weekIndex >= 0 && weekIndex < forecasts.length) {
           forecasts[weekIndex].incomingShipments += order.units;
-          console.log(`Added ${order.units} units to week ${weekIndex}`);
         }
       });
     }
@@ -117,7 +107,6 @@ export default function Dashboard() {
           : 0;
     });
 
-    console.log("Final forecasts:", forecasts);
     return forecasts;
   };
 
@@ -389,10 +378,7 @@ export default function Dashboard() {
         isLoading={productsLoading}
       />
       {productId && (
-        <ProductOrders
-          orders={orders || []}
-          isLoading={ordersLoading}
-        />
+        <ProductOrders orders={orders || []} isLoading={ordersLoading} />
       )}
       <OrderShipments shipments={orderShipments} />
 

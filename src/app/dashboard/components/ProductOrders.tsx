@@ -17,7 +17,6 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { revalidatePath } from "next/cache";
 
 interface ProductOrdersProps {
   orders: Order[];
