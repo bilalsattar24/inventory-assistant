@@ -357,7 +357,21 @@ export default function Dashboard() {
     params.currentFBAStock,
     weeklyForecasts,
   ]);
-
+  if (!product) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <HStack mb={6} justify="space-between" align="center">
+          <Link href="/products">
+            <Button colorScheme="gray" size="sm">
+              Back to Products
+            </Button>
+          </Link>
+          <Heading size="lg">Inventory Dashboard</Heading>
+        </HStack>
+        <Heading mb={6}>No product selected</Heading>
+      </Container>
+    );
+  }
   return (
     <Container maxW="container.xl" py={8}>
       <HStack mb={6} justify="space-between" align="center">
@@ -377,9 +391,9 @@ export default function Dashboard() {
         onToggleParams={() => setShowParams(!showParams)}
         isLoading={productsLoading}
       />
-      {productId && (
-        <ProductOrders orders={orders || []} isLoading={ordersLoading} />
-      )}
+
+      <ProductOrders orders={orders || []} isLoading={ordersLoading} />
+
       <OrderShipments shipments={orderShipments} />
 
       <ForecastTable
