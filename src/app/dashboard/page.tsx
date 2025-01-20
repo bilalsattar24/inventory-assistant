@@ -225,6 +225,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    //calculate when the next order should be placed
     const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
     const today = new Date();
     const avgDailySales = calculateAverageDailySales(
