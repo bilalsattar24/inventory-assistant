@@ -33,11 +33,11 @@ export default function Dashboard() {
   const product = products?.find((p) => p.id === Number(productId));
 
   const [params, setParams] = useState<InventoryParams>({
-    safetyStockDays: 45,
-    productionLeadTime: 30,
-    shippingLeadTime: 50,
-    maxStockDays: 100,
-    currentFBAStock: 0, // Start with 0 as we'll update this when product loads
+    safetyStockDays: product?.safety_stock_days,
+    productionLeadTime: product?.production_lead_time_days,
+    shippingLeadTime: product?.shipping_lead_time,
+    maxStockDays: product?.max_stock_days,
+    currentFBAStock: product?.current_stock_units,
   });
 
   // Update params when product data is loaded
@@ -249,14 +249,14 @@ export default function Dashboard() {
     // Calculate order shipments
     const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
     const today = new Date();
+    console.log("Starting simulation with today as:", today);
     const orders: OrderShipment[] = [];
 
     // Simulate inventory over time to determine when orders are needed
     let simulatedInventory = params.currentFBAStock;
     let currentDate = today;
-    const endDate = addDays(today, 48 * 7); // 48 weeks
-
-    while (currentDate < endDate) {
+    console.log("Initial inventory:", simulatedInventory);
+    while (currentDate < addDays(today, 48 * 7)) {
       const avgDailySales = calculateAverageDailySales(
         currentDate,
         addDays(currentDate, totalLeadTime)
@@ -268,12 +268,26 @@ export default function Dashboard() {
           avgDailySales
       );
 
+      console.log("Days until safety stock:", daysUntilSafetyStock);
+      console.log("Current simulated inventory:", simulatedInventory);
+      console.log("Average daily sales:", avgDailySales);
+
       if (daysUntilSafetyStock <= totalLeadTime) {
         // We need to place an order
         const requiredArrivalDate = addDays(currentDate, daysUntilSafetyStock);
         const shipDate = addDays(requiredArrivalDate, -params.shippingLeadTime);
         const orderDate = addDays(shipDate, -params.productionLeadTime);
 
+        console.log("New order calculation:", {
+          currentDate,
+          daysUntilSafetyStock,
+          requiredArrivalDate,
+          shipDate,
+          orderDate,
+          totalLeadTime,
+          productionLeadTime: params.productionLeadTime,
+          shippingLeadTime: params.shippingLeadTime,
+        });
         // Calculate order quantity
         const projectedInventory =
           simulatedInventory - avgDailySales * daysUntilSafetyStock;
