@@ -17,6 +17,7 @@ export default function Dashboard() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
   const [showParams, setShowParams] = useState(false);
+  const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
 
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
@@ -89,6 +90,28 @@ export default function Dashboard() {
       });
     }
 
+    if (orderShipments) {
+      orderShipments.forEach((shipment) => {
+        const deliveryDate = new Date(shipment.requiredArrivalDate);
+        const weekStart = startOfWeek(deliveryDate, { weekStartsOn: 1 });
+
+        // Find the week index by comparing dates
+        const weekIndex = forecasts.findIndex((forecast) => {
+          const forecastDate = new Date(forecast.date);
+          return (
+            forecastDate.getFullYear() === weekStart.getFullYear() &&
+            forecastDate.getMonth() === weekStart.getMonth() &&
+            forecastDate.getDate() === weekStart.getDate()
+          );
+        });
+
+        // Only add if the week is within our forecast range
+        if (weekIndex >= 0 && weekIndex < forecasts.length) {
+          forecasts[weekIndex].incomingShipments += shipment.shipQuantity;
+        }
+      });
+    }
+
     // Calculate running inventory and days of stock
     let runningInventory = params.currentFBAStock;
     forecasts.forEach((week, index) => {
@@ -118,8 +141,6 @@ export default function Dashboard() {
   useEffect(() => {
     setWeeklyForecasts(calculateForecasts());
   }, [params, orders]); // Recalculate when params or orders change
-
-  const [orderShipments, setOrderShipments] = useState<OrderShipment[]>([]);
 
   const handleParamChange =
     (param: keyof InventoryParams) => (e: ChangeEvent<HTMLInputElement>) => {

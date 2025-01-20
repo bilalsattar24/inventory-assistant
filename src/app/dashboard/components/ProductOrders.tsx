@@ -98,11 +98,9 @@ export default function ProductOrders({
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium">Recent Orders</h3>
-        {productId && (
-          <Button size="sm" colorScheme="blue" onClick={openCreateModal}>
-            New Order
-          </Button>
-        )}
+        <Button size="sm" colorScheme="blue" onClick={openCreateModal}>
+          New Order
+        </Button>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-2">
         {orders.map((order) => (
