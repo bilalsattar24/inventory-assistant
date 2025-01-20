@@ -62,7 +62,7 @@ export default function Dashboard() {
       date: addDays(mondayOfThisWeek, i * 7),
       incomingShipments: 0,
       amazonInventory: i === 0 ? params.currentFBAStock : 0,
-      forecastedDailySales: 10,
+      forecastedDailySales: 30,
       daysOfStock: 0,
     }));
 
@@ -257,6 +257,7 @@ export default function Dashboard() {
       orderQuantity: Math.max(0, orderQuantity),
       shipDate,
       shipQuantity: Math.max(0, orderQuantity),
+      requiredArrivalDate: requiredArrivalDate,
       lowStockAlert:
         minInventory < params.safetyStockDays * avgDailySales
           ? `Low stock alert: ${Math.floor(
@@ -349,9 +350,9 @@ export default function Dashboard() {
         isFinite(forecast.daysOfStock)
     );
 
-    if (hasChanged && hasValidValues) {
+    /*if (hasChanged && hasValidValues) {
       setWeeklyForecasts(finalForecasts);
-    }
+    }*/
   }, [
     orderShipments,
     params.shippingLeadTime,

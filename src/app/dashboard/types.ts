@@ -19,5 +19,6 @@ export interface OrderShipment {
   orderQuantity: number;
   shipDate: Date;
   shipQuantity: number;
+  requiredArrivalDate: Date;
   lowStockAlert: string | null;
 }
