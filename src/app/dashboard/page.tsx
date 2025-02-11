@@ -24,7 +24,7 @@ export default function Dashboard() {
     queryFn: fetchProducts,
   });
 
-  const { data: orders, isLoading: ordersLoading } = useQuery({
+  const { data: productOrders, isLoading: ordersLoading } = useQuery({
     queryKey: ["orders", productId],
     queryFn: () => fetchOrders(Number(productId)),
     enabled: !!productId,
@@ -68,8 +68,8 @@ export default function Dashboard() {
     }));
 
     // Add order quantities to the appropriate weeks if orders exist
-    if (orders) {
-      orders.forEach((order) => {
+    if (productOrders) {
+      productOrders.forEach((order) => {
         const deliveryDate = new Date(order.expected_arrival_date);
         const weekStart = startOfWeek(deliveryDate, { weekStartsOn: 1 });
 
@@ -140,7 +140,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     setWeeklyForecasts(calculateForecasts());
-  }, [params, orders]); // Recalculate when params or orders change
+  }, [params, productOrders]); // Recalculate when params or orders change
 
   const handleParamChange =
     (param: keyof InventoryParams) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -331,6 +331,7 @@ export default function Dashboard() {
     params.maxStockDays,
     params.currentFBAStock,
     weeklyForecasts.map((f) => f.forecastedDailySales).join(","),
+    productOrders,
   ]);
 
   useEffect(() => {
@@ -452,7 +453,7 @@ export default function Dashboard() {
         isLoading={productsLoading}
       />
 
-      <ProductOrders orders={orders || []} isLoading={ordersLoading} />
+      <ProductOrders orders={productOrders || []} isLoading={ordersLoading} />
 
       <OrderShipments shipments={orderShipments} />
 
