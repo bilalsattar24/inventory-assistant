@@ -76,7 +76,7 @@ export default function Dashboard() {
     const mondayOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
 
     // Initialize base forecasts
-    const forecasts = Array.from({ length: 24 }, (_, i) => ({
+    const forecasts = Array.from({ length: 52 }, (_, i) => ({
       date: addDays(mondayOfThisWeek, i * 7),
       incomingShipments: 0,
       amazonInventory: i === 0 ? params.currentFBAStock : 0,
@@ -194,9 +194,10 @@ export default function Dashboard() {
       >
     ) =>
     (e: ChangeEvent<HTMLInputElement>) => {
-      const newValue = Number(e.target.value);
-      setWeeklyForecasts((prevForecasts) =>
-        prevForecasts.map((week, i) => {
+      const newValue = e.target.value === "" ? 0 : Number(e.target.value);
+
+      setWeeklyForecasts((prevForecasts) => {
+        const newForecasts = prevForecasts.map((week, i) => {
           if (i === index) {
             return {
               ...week,
@@ -204,8 +205,35 @@ export default function Dashboard() {
             };
           }
           return week;
-        })
-      );
+        });
+
+        // Recalculate inventory and days of stock for this week and all future weeks
+        for (let i = index; i < newForecasts.length; i++) {
+          const currentWeek = newForecasts[i];
+          const prevWeek = i > 0 ? newForecasts[i - 1] : null;
+
+          // Calculate new inventory
+          if (i === 0) {
+            currentWeek.amazonInventory =
+              (params.currentFBAStock || 0) + currentWeek.incomingShipments;
+          } else if (prevWeek) {
+            const weeklyDemand = prevWeek.forecastedDailySales * 7;
+            currentWeek.amazonInventory =
+              Math.max(0, prevWeek.amazonInventory - weeklyDemand) +
+              currentWeek.incomingShipments;
+          }
+
+          // Update days of stock
+          currentWeek.daysOfStock =
+            currentWeek.forecastedDailySales > 0
+              ? Math.round(
+                  currentWeek.amazonInventory / currentWeek.forecastedDailySales
+                )
+              : 999; // If no sales forecasted, show very high days of stock
+        }
+
+        return newForecasts;
+      });
     };
 
   const handleFillDown = async (index: number) => {
@@ -470,15 +498,25 @@ export default function Dashboard() {
         isFinite(forecast.daysOfStock)
     );
 
-    /*if (hasChanged && hasValidValues) {
-      setWeeklyForecasts(finalForecasts);
-    }*/
-  }, [
-    orderShipments,
-    params.shippingLeadTime,
-    params.currentFBAStock,
-    weeklyForecasts,
-  ]);
+  }, [orderShipments, params.shippingLeadTime, params.currentFBAStock]);
+
+  // Initialize and update forecasts when dependencies change
+  useEffect(() => {
+    // Wait for all data to be loaded
+    if (!productsLoading && !ordersLoading && !forecastsLoading) {
+      const newForecasts = calculateForecasts();
+      setWeeklyForecasts(prev => {
+        // If we have previous forecasts, preserve user-entered values
+        if (prev.length > 0) {
+          return newForecasts.map((forecast, i) => ({
+            ...forecast,
+            forecastedDailySales: prev[i]?.forecastedDailySales ?? forecast.forecastedDailySales
+          }));
+        }
+        return newForecasts;
+      });
+    }
+  }, [productOrders, orderShipments, params.currentFBAStock, savedForecasts, productsLoading, ordersLoading, forecastsLoading]);
   if (!product) {
     return (
       <Container maxW="container.xl" py={8}>
