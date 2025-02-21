@@ -12,6 +12,7 @@ import { fetchProducts } from "@/lib/products";
 import { fetchOrders } from "@/lib/orders";
 import Link from "next/link";
 import ProductOrders from "./components/ProductOrders";
+import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -53,6 +54,22 @@ export default function Dashboard() {
     }
   }, [product]);
 
+  // Fetch saved forecasts from database
+  const { data: savedForecasts, isLoading: forecastsLoading } = useQuery({
+    queryKey: ["forecasts", productId],
+    queryFn: async () => {
+      if (!productId) return null;
+      const { data } = await supabase
+        .from("WeeklyForecastedSales")
+        .select("*")
+        .eq("product_id", productId)
+        .order("week_start_date", { ascending: true });
+      return data;
+    },
+    enabled: !!productId,
+    staleTime: 0, // Always fetch fresh data
+  });
+
   // Calculate weekly forecasts
   const calculateForecasts = () => {
     const today = new Date();
@@ -63,9 +80,29 @@ export default function Dashboard() {
       date: addDays(mondayOfThisWeek, i * 7),
       incomingShipments: 0,
       amazonInventory: i === 0 ? params.currentFBAStock : 0,
-      forecastedDailySales: 30,
+      forecastedDailySales: 0,
       daysOfStock: 0,
     }));
+
+    // Apply saved forecasts if they exist
+    if (savedForecasts) {
+      savedForecasts.forEach((saved) => {
+        const weekStart = startOfWeek(new Date(saved.week_start_date), {
+          weekStartsOn: 1,
+        });
+        const weekIndex = forecasts.findIndex((forecast) => {
+          const forecastDate = startOfWeek(new Date(forecast.date), {
+            weekStartsOn: 1,
+          });
+          return forecastDate.getTime() === weekStart.getTime();
+        });
+
+        if (weekIndex >= 0 && weekIndex < forecasts.length) {
+          forecasts[weekIndex].forecastedDailySales =
+            saved.daily_forecasted_sales;
+        }
+      });
+    }
 
     // Add order quantities to the appropriate weeks if orders exist
     if (productOrders) {
@@ -140,7 +177,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     setWeeklyForecasts(calculateForecasts());
-  }, [params, productOrders]); // Recalculate when params or orders change
+  }, [params, productOrders, savedForecasts]); // Recalculate when params, orders, or saved forecasts change
 
   const handleParamChange =
     (param: keyof InventoryParams) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -171,10 +208,12 @@ export default function Dashboard() {
       );
     };
 
-  const handleFillDown = (index: number) => {
+  const handleFillDown = async (index: number) => {
     const valueToFill = weeklyForecasts[index].forecastedDailySales;
-    setWeeklyForecasts((prevForecasts) =>
-      prevForecasts.map((week, i) => {
+
+    // Update state
+    setWeeklyForecasts((prevForecasts) => {
+      const newForecasts = prevForecasts.map((week, i) => {
         if (i >= index) {
           return {
             ...week,
@@ -182,8 +221,30 @@ export default function Dashboard() {
           };
         }
         return week;
-      })
-    );
+      });
+
+      // Save all updated forecasts to the database
+      const updatedForecasts = newForecasts.slice(index).map((week) => ({
+        product_id: Number(productId),
+        week_start_date: week.date.toISOString().split("T")[0],
+        daily_forecasted_sales: valueToFill,
+      }));
+
+      // Use Promise to handle the database update
+      Promise.resolve().then(async () => {
+        try {
+          await supabase
+            .from("WeeklyForecastedSales")
+            .upsert(updatedForecasts, {
+              onConflict: "product_id,week_start_date",
+            });
+        } catch (error) {
+          console.error("Error saving forecasts:", error);
+        }
+      });
+
+      return newForecasts;
+    });
   };
 
   const calculateAverageDailySales = (
@@ -458,6 +519,7 @@ export default function Dashboard() {
       <OrderShipments shipments={orderShipments} />
 
       <ForecastTable
+        productId={Number(productId)}
         forecasts={weeklyForecasts}
         onForecastChange={handleForecastChange}
         onFillDown={handleFillDown}

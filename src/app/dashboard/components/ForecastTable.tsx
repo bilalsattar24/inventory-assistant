@@ -13,8 +13,10 @@ import {
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { format } from "date-fns";
 import { WeeklyForecast } from "../types";
+import { supabase } from "@/lib/supabase";
 
 interface ForecastTableProps {
+  productId: number;
   forecasts: WeeklyForecast[];
   onForecastChange: (
     index: number,
@@ -27,10 +29,39 @@ interface ForecastTableProps {
 }
 
 export function ForecastTable({
+  productId,
   forecasts,
   onForecastChange,
   onFillDown,
 }: ForecastTableProps) {
+  const saveForecast = async (index: number, value: number) => {
+    const forecast = forecasts[index];
+    const weekStartDate = forecast.date.toISOString().split("T")[0];
+
+    await supabase.from("WeeklyForecastedSales").upsert(
+      {
+        product_id: productId,
+        week_start_date: weekStartDate,
+        daily_forecasted_sales: value,
+      },
+      {
+        onConflict: "product_id,week_start_date",
+      }
+    );
+  };
+
+  const handleForecastChange =
+    (
+      index: number,
+      field: keyof Pick<WeeklyForecast, "forecastedDailySales">
+    ) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseFloat(e.target.value);
+      onForecastChange(index, field)(e);
+      if (field === "forecastedDailySales") {
+        saveForecast(index, value);
+      }
+    };
   console.log(
     "Rendering ForecastTable with",
     forecasts.length,
@@ -63,7 +94,7 @@ export function ForecastTable({
                 <Input
                   type="number"
                   value={week.forecastedDailySales}
-                  onChange={onForecastChange(index, "forecastedDailySales")}
+                  onChange={handleForecastChange(index, "forecastedDailySales")}
                   size="sm"
                   width="100px"
                 />
