@@ -335,17 +335,54 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Exit early if any required variables are undefined
+    if (
+      params.safetyStockDays === undefined ||
+      params.productionLeadTime === undefined ||
+      params.shippingLeadTime === undefined ||
+      params.maxStockDays === undefined ||
+      params.currentFBAStock === undefined ||
+      !weeklyForecasts?.length ||
+      !productOrders
+    ) {
+      return;
+    }
+
     // Calculate order shipments
     const totalLeadTime = params.productionLeadTime + params.shippingLeadTime;
     const today = new Date();
     console.log("Starting simulation with today as:", today);
     const orders: OrderShipment[] = [];
 
+    // Helper function to get incoming shipments for the week of the given date
+    const getIncomingShipmentsForDate = (date: Date): number => {
+      let incomingShipments = 0;
+
+      // Check existing product orders
+      if (productOrders) {
+        const weekStart = startOfWeek(date);
+        const weekEnd = addDays(weekStart, 6);
+
+        productOrders.forEach((order) => {
+          const deliveryDate = new Date(order.expected_arrival_date);
+          if (deliveryDate >= weekStart && deliveryDate <= weekEnd) {
+            incomingShipments += order.units;
+          }
+        });
+      }
+
+      return incomingShipments;
+    };
+
     // Simulate inventory over time to determine when orders are needed
     let simulatedInventory = params.currentFBAStock;
     let currentDate = today;
     console.log("Initial inventory:", simulatedInventory);
-    while (currentDate < addDays(today, 48 * 7)) {
+
+    while (currentDate < addDays(today, 52 * 7)) {
+      // Add any incoming shipments for the current date
+      simulatedInventory += getIncomingShipmentsForDate(currentDate);
+
       const avgDailySales = calculateAverageDailySales(
         currentDate,
         addDays(currentDate, totalLeadTime)
