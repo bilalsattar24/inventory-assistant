@@ -497,7 +497,6 @@ export default function Dashboard() {
         isFinite(forecast.amazonInventory) &&
         isFinite(forecast.daysOfStock)
     );
-
   }, [orderShipments, params.shippingLeadTime, params.currentFBAStock]);
 
   // Initialize and update forecasts when dependencies change
@@ -505,18 +504,27 @@ export default function Dashboard() {
     // Wait for all data to be loaded
     if (!productsLoading && !ordersLoading && !forecastsLoading) {
       const newForecasts = calculateForecasts();
-      setWeeklyForecasts(prev => {
+      setWeeklyForecasts((prev) => {
         // If we have previous forecasts, preserve user-entered values
         if (prev.length > 0) {
           return newForecasts.map((forecast, i) => ({
             ...forecast,
-            forecastedDailySales: prev[i]?.forecastedDailySales ?? forecast.forecastedDailySales
+            forecastedDailySales:
+              prev[i]?.forecastedDailySales ?? forecast.forecastedDailySales,
           }));
         }
         return newForecasts;
       });
     }
-  }, [productOrders, orderShipments, params.currentFBAStock, savedForecasts, productsLoading, ordersLoading, forecastsLoading]);
+  }, [
+    productOrders,
+    orderShipments,
+    params.currentFBAStock,
+    savedForecasts,
+    productsLoading,
+    ordersLoading,
+    forecastsLoading,
+  ]);
   if (!product) {
     return (
       <Container maxW="container.xl" py={8}>
