@@ -404,12 +404,16 @@ export default function Dashboard() {
         const shipDate = addDays(requiredArrivalDate, -params.shippingLeadTime);
         const orderDate = addDays(shipDate, -params.productionLeadTime);
 
+        // Ensure order date is not in the past
+        const newOrderDate = orderDate < today ? today : orderDate;
+
         console.log("New order calculation:", {
           currentDate,
           daysUntilSafetyStock,
           requiredArrivalDate,
           shipDate,
           orderDate,
+          newOrderDate,
           totalLeadTime,
           productionLeadTime: params.productionLeadTime,
           shippingLeadTime: params.shippingLeadTime,
@@ -424,7 +428,7 @@ export default function Dashboard() {
 
         // Add the order
         const newOrder: OrderShipment = {
-          orderDate,
+          orderDate: newOrderDate,
           orderQuantity: Math.max(0, orderQuantity),
           shipDate,
           shipQuantity: Math.max(0, orderQuantity),
